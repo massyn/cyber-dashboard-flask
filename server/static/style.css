@@ -1,0 +1,218 @@
+/* Global Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f4f7fa;
+    color: #333;
+    font-size: 16px;
+}
+
+/* Main Container */
+.app-container {
+    display: flex;
+    flex-direction: column; /* Stack divs vertically by default */
+    gap: 20px;
+    padding: 30px;
+    height: auto; /* Allow height to adjust */
+}
+
+/* Header */
+.header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+    background-color: #ffffff;
+    padding: 20px 40px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-title {
+    font-size: 2.5em;
+    color: #444;
+    margin: 0;
+    font-weight: 600;
+}
+
+.header-description {
+    font-size: 1.1em;
+    color: #777;
+    margin: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 280px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    position: sticky;
+    top: 100px; /* Keep filters fixed below header */
+    height: calc(100vh - 60px); /* Ensure it doesn't overlap header */
+}
+
+.sidebar-header {
+    font-size: 1.6em;
+    color: #444;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.filters-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-label {
+    font-size: 1.1em;
+    color: #444;
+    margin-bottom: 10px;
+}
+
+.dropdown {
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    font-size: 1em;
+}
+
+/* Main Content */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    flex-grow: 1;
+}
+
+/* Graph Container */
+.graph-container {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    gap: 20px;
+    width: 100%;
+}
+
+/* Sub-Graphs Layout */
+.sub-graphs-container {
+    display: flex;
+    flex-direction: row; /* Align the two graphs side by side */
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Individual Graph Styles */
+.graph {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #ffffff;
+    padding: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.overview-graph {
+    width: 100%; /* Full-width */
+    height: 400px; /* Consistent height */
+}
+
+.sub-graph {
+    flex: 1; /* Equal width for both graphs */
+    height: 300px; /* Slightly shorter height */
+}
+
+/* Table Container */
+
+.table-container {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.dash-table-container .dash-spreadsheet-container {
+    height: 300px;
+    overflow-y: auto;
+}
+
+/* Responsive Styles */
+@media (min-width: 900px) {
+    .app-container {
+        flex-direction: row; /* Desktop layout: Sidebar and content side-by-side */
+        justify-content: space-between;
+        flex-wrap: nowrap; /* Prevent wrapping */
+        height: 100vh; /* Match viewport height */
+    }
+
+    .sidebar {
+        width: 280px;
+        position: sticky;
+    }
+
+    .main-content {
+        width: calc(100% - 320px); /* Adjust width to account for sidebar */
+    }
+
+    .sub-graphs-container {
+        flex-direction: row; /* Keep graphs side by side on desktop */
+    }
+
+    .sub-graph {
+        width: 48%; /* Adjust width for two graphs side by side */
+    }
+}
+
+@media (max-width: 900px) {
+    .app-container {
+        flex-direction: column; /* Stack everything */
+        padding: 20px;
+    }
+
+    .sidebar {
+        width: 100%;
+        margin-bottom: 20px;
+        position: static; /* Make it scroll with content */
+        height: auto; /* Adjust height */
+    }
+
+    .main-content {
+        width: 100%;
+    }
+
+    .header-title {
+        font-size: 2em;
+    }
+
+    .graph {
+        width: 100%; /* Full-width on smaller screens */
+    }
+
+    .sub-graphs-container {
+        flex-direction: column; /* Stack graphs vertically */
+    }
+
+    .sub-graph {
+        width: 100%; /* Full-width */
+    }
+
+    .dash-table-container .dash-spreadsheet {
+        width: 100%; /* Full width on smaller screens */
+    }
+}
