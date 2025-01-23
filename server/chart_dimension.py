@@ -1,5 +1,6 @@
 import plotly.express as px
 import pandas as pd
+import plotly.graph_objects as go
 
 def generate_executive_dimension_chart(RAG,dimensions,df):
     q1 = (
@@ -39,5 +40,16 @@ def generate_executive_dimension_chart(RAG,dimensions,df):
     fig.update_yaxes(title=None)
     fig.update_xaxes(range=[0, 1],tickformat=".0%", title=None)
     fig.update_layout(showlegend=False)
+
+    slo_value = result["slo"].mean()
+    fig.add_vline(
+        x=slo_value,
+        line_color=RAG['green'][0]
+    )
+    slo_value = result["slo_min"].mean()
+    fig.add_vline(
+        x=slo_value,
+        line_color=RAG['amber'][0]
+    )
 
     return fig

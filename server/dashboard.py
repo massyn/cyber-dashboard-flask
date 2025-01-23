@@ -1,8 +1,8 @@
-from flask import flash, redirect, session, url_for, request, render_template, send_from_directory
+from flask import flash, redirect, session, url_for, request, render_template, send_from_directory, jsonify
 from dash import Dash, html, dcc, Input, Output
 import pandas as pd
 import plotly.express as px
-import yaml
+import datetime
 import os
 from chart_overview import generate_executive_overview_chart
 from chart_dimension import generate_executive_dimension_chart
@@ -15,6 +15,11 @@ config = read_config()
 
 filters = config['dimensions']
 RAG = config['RAG']
+
+# Configuration for brute force detection
+FAILED_ATTEMPTS_LIMIT = config.get('brute_force',{}).get('count',10)
+BLOCK_DURATION = datetime.timedelta(minutes=config.get('brute_force',{}).get('minutes',5))
+login_attempts = {}
 
 if not os.path.exists(config['data']['summary']):
     initial_data = pd.DataFrame({
@@ -32,6 +37,26 @@ if not os.path.exists(config['data']['summary']):
         initial_data[d] = pd.Series(dtype="str")
 
     initial_data.to_parquet(config['data']['summary'], index=False)
+
+def brute_force(ip, reset=False):
+    
+    if reset or ip not in login_attempts:
+        login_attempts[ip] = {"failed_count": 0, "last_failed_time": None}
+        return False
+
+    # Check if IP is currently blocked
+    attempts = login_attempts[ip]
+    if attempts["failed_count"] >= FAILED_ATTEMPTS_LIMIT:
+        if datetime.datetime.now() - attempts["last_failed_time"] < BLOCK_DURATION:
+            return True  # IP is blocked, return True for block status
+        else:
+            # Reset failed attempts after block duration expires
+            login_attempts[ip] = {"failed_count": 0, "last_failed_time": None}
+
+    # Increment the counter and update the last failed time
+    login_attempts[ip]["failed_count"] += 1
+    login_attempts[ip]["last_failed_time"] = datetime.datetime.now()
+    return False  # IP is not blocked
 
 # Function to load the dataset
 def load_summary():
@@ -119,8 +144,12 @@ def create_dashboard(server):
 
     @server.before_request
     def require_login():
+        # Check if IP is blocked and return 429 if blocked
+        ip = request.remote_addr
+        if brute_force(ip):
+            return jsonify({"error": "Too many failed attempts. Try again later."}), 429
         # Skip login check for static files and the login endpoint
-        if request.endpoint not in ('login', 'static','/favicon.ico') and not session.get('logged_in'):
+        if request.endpoint not in ('login', 'static','/_favicon.ico','api.update_data') and not session.get('logged_in'):
             return redirect(url_for('login'))
 
     # Callback to update the bar chart based on selected filters

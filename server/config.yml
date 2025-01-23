@@ -8,6 +8,9 @@ secret_key: FB7E8E6841E29B45B1158029C9606D43FA8083704EBA83EC620FAD2373BDAEBE  # 
 data:
   detail: ../data/detail.parquet
   summary: ../data/summary.parquet
+brute_force:
+  count: 100
+  minutes: 3
 # -- tweak the RAG colour scheme here if you like.
 RAG:
   red:   ['#C00000', '#000000']

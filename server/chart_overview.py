@@ -1,4 +1,5 @@
 import plotly.express as px
+import plotly.graph_objects as go
 
 def generate_executive_overview_chart(RAG,df):
     q1 = (
@@ -31,7 +32,7 @@ def generate_executive_overview_chart(RAG,df):
             "amber": RAG['amber'][0],
             "green": RAG['green'][0]
         },
-        title="Executive Summary xxx",
+        title="Executive Summary",
         text_auto=True
     )
     fig.update_yaxes(range=[0, 1], tickformat=".0%", title=None)
@@ -39,4 +40,24 @@ def generate_executive_overview_chart(RAG,df):
     fig.update_layout(showlegend=False)
     fig.update_layout(xaxis_type="category")
 
+    # Add SLO lines
+    fig.add_trace(
+        go.Scatter(
+            x=result["datestamp"],
+            y=result["slo"],
+            mode="lines",
+            name="SLO",
+            line=dict(color=RAG['green'][0])
+        )
+    )
+    # Add SLO_min lines
+    fig.add_trace(
+        go.Scatter(
+            x=result["datestamp"],
+            y=result["slo_min"],
+            mode="lines",
+            name="SLO_Min",
+            line=dict(color=RAG['amber'][0])
+        )
+    )
     return fig
