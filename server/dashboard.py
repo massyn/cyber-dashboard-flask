@@ -39,7 +39,6 @@ if not os.path.exists(config['data']['summary']):
     initial_data.to_parquet(config['data']['summary'], index=False)
 
 def brute_force(ip, reset=False):
-    
     if reset or ip not in login_attempts:
         login_attempts[ip] = {"failed_count": 0, "last_failed_time": None}
         return False
@@ -84,13 +83,13 @@ def create_dashboard(server):
                     html.Label(f"Select a {label}:", className="dropdown-label"),
                     dcc.Dropdown(
                         id=f"{column_name}-dropdown",
-                        options=[{"label": value, "value": value} for value in sorted(data_latest.get(column_name, pd.Series()).unique())],
+                        options=[],  # Start with an empty list; options are populated by the callback
                         value=None,
                         placeholder=f"Select a {label}",
                         className="dropdown"
                     )
-                ], className="filter-item") for column_name, label in filters.items()
-            ])
+                ], className="filter-item") for column_name, label in filters.items()],
+            )
         ]),
         html.Div(className="main-content", children=[
             html.Div(className="header", children=[
@@ -151,6 +150,24 @@ def create_dashboard(server):
         # Skip login check for static files and the login endpoint
         if request.endpoint not in ('login', 'static','/_favicon.ico','api.update_data') and not session.get('logged_in'):
             return redirect(url_for('login'))
+
+    @app.callback(
+        [Output(f"{column_name}-dropdown", "options") for column_name in filters.keys()],
+        [Input("overview-graph", "id")]
+    )
+    def update_dropdown_options(_):
+        """Update the dropdown options dynamically based on the latest data."""
+        df_summary = load_summary()
+        data_latest = df_summary[df_summary['datestamp'] == df_summary['datestamp'].max()]
+
+        # Create updated options for each filter
+        dropdown_options = []
+        for column_name in filters.keys():
+            unique_values = data_latest.get(column_name, pd.Series()).unique()
+            options = [{"label": value, "value": value} for value in sorted(unique_values)]
+            dropdown_options.append(options)
+
+        return dropdown_options
 
     # Callback to update the bar chart based on selected filters
     @app.callback(
