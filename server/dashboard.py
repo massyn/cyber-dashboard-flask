@@ -188,7 +188,11 @@ def create_dashboard(server):
 
         df_summary['score'] = df_summary['totalok'] / df_summary['total'] * df_summary['weight']
 
-        df_summary_latest = df_summary[df_summary['datestamp'] == df_summary['datestamp'].max()]
+        df_summary_latest = df_summary.merge(
+            df_summary.groupby('metric_id', as_index=False).agg({'datestamp': 'max'}),
+            on=['metric_id', 'datestamp'],
+            how='inner'
+        )
 
         fig_overview = generate_executive_overview_chart(RAG, df_summary)
         fig_dimension = generate_executive_dimension_chart(RAG, config['dimensions'], df_summary_latest)

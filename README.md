@@ -120,7 +120,7 @@ Aggregation is the process of merging metrics together, to allow for a consolida
 
 The dashboard does two types of aggregation.  The first is on the first dimension (as specified in the `config.yml` file), showing a breakdown of the latest metric data load aggregated by that dimension.  The second is an aggregation by the `category` column (as specified during the data load process).
 
-Aggregation is based off a weighted-average approach.  Rather than just simply doing an average of all metrics, you have the ability to adjust the weight of each metric during data load.  If one metric is more important than another, you have the ability to adjust the weight for that metric which will result in that metric's score having a bigger influence over the the resulting score.
+Aggregation is based off a weighted-average approach.  Rather than just simply doing an average of all metrics, you have the ability to adjust the weight of each metric during data load.  If one metric is more important than another, you have the ability to adjust the weight for that metric which will result in that metric's score having a bigger influence over the resulting score.
 
 ### Attribution
 
@@ -130,25 +130,114 @@ Dimensions can be customised.  Update the `config.yml` file with any additional 
 
 ### config.yml
 
-TODO
+The `config.yaml` file describes the basic behaviour used for configuring the cyber dashboard.
 
-## Write a metric
+### `dimensions`
+Defines the dimension fields used to categorize data on the dashboard. These dimensions are tied to specific column names in the CSV or data files.  These fields can be customised if you want to load additional data.  The following fields are defined.
 
-### What is important?
+- **business_unit**: The label for the "Business Unit" dimension. This field maps to the `business_unit` column in the dataset and represents different business units within the organization.
+- **team**: The label for the "Team" dimension. This field corresponds to the `team` column and represents various teams within the business.
+- **location**: The label for the "Location" dimension. This maps to the `location` column in the data and identifies where the team or business unit is physically located.
 
-When defining a metric, we start by figuring out what we are trying to measure.  The dashboard metrics are always a percentage, with 100% being good, so when defining metrics, you need to write them in such a way to reflect this consistent view.  The reason we do it this way is to allow for data aggregation to occur.  
+### `tokens`
+An array of bearer tokens that are used for authentication purposes. These tokens should be updated before going live to ensure security.
 
-TODO
+- **Example**: 
+  ```yaml
+  tokens:
+    - 6002920168C3253430A653E16AD36EE88F6E3C7D917A5F245F735D96ABDA67FE
+  ```
+  - **Note**: Make sure to replace these tokens before the application goes live.
+
+### `secret_key`
+A secret key used for session token encryption. This key should be kept secure and changed before going live to prevent unauthorized access to session data.
+
+- **Example**:
+  ```yaml
+  secret_key: FB7E8E6841E29B45B1158029C9606D43FA8083704EBA83EC620FAD2373BDAEBE
+  ```
+  - **Note**: This key is critical for the security of your application. Ensure it is changed before deployment.
+
+### `data`
+Defines the paths to the data files used in the dashboard.
+
+- **detail**: Specifies the location of the detailed data file (`detail.parquet`). This file is used for providing detailed insights into the operational data.
+- **summary**: Specifies the location of the summary data file (`summary.parquet`). This file aggregates the data for a high-level overview on the dashboard.
+
+Example:
+```yaml
+data:
+  detail: ../data/detail.parquet
+  summary: ../data/summary.parquet
+```
+
+### `brute_force`
+Configuration for brute force attack detection, specifying the threshold for identifying suspicious activity.
+
+- **count**: The number of failed login attempts considered suspicious within a given time period.
+- **minutes**: The time window in minutes for counting failed login attempts. If the count exceeds this threshold within the specified time, it triggers an alert for potential brute force activity.
+
+Example:
+```yaml
+brute_force:
+  count: 100
+  minutes: 3
+```
+In this example, if there are more than 100 failed login attempts within 3 minutes, the system will flag this activity.
+
+### `RAG` (Red-Amber-Green Color Scheme)
+This section defines the color scheme for the dashboard's Risk, Alert, and Guard (RAG) indicators. You can tweak these colors to match your visual preference.
+
+- **red**: The colors for the "red" state, typically indicating critical or high-risk conditions. The first color represents the background, and the second represents the text color.
+- **amber**: The colors for the "amber" state, representing moderate or cautionary conditions.
+- **green**: The colors for the "green" state, representing safe or normal conditions.
+
+Example:
+```yaml
+RAG:
+  red:   ['#C00000', '#000000']
+  amber: ['#FFC000', '#FFFFFF']
+  green: ['#00B050', '#000000']
+```
+
+### `users`
+A list of authorized users and their associated password hashes in SHA-256 format. This section must be updated or removed before going live to ensure that the credentials are secure.
+
+- **user**: A username paired with a SHA-256 hashed password. In the example below, the password "password123" has been hashed to `ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f`.
+
+Example:
+```yaml
+users:
+  user: ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f  # password123
+```
+- **Note**: Before going live, make sure to replace this with actual users and strong password hashes.
+
+### Security Considerations:
+- **Tokens** and **secret keys** must be kept confidential and secure. Do not hard-code them in public repositories.
+- Regularly update your **users** and **password hashes** to ensure they remain secure.
+- Review the **RAG color scheme** and adjust the colors for visual clarity, especially if accessibility is a concern.
+
+This configuration file is crucial for setting up and securing the Flask-based dashboard. Ensure that all fields are properly configured and that sensitive data is handled securely before going live.
+
 
 ## Additional tops for success
 
 * The `compliance` field is a float, a percentage of compliance if you will.  That means that when you decide compliance for a particular resource, you could infact define _partial_ compliance.
-* To backup and restore, simply grab the `data` folder, and store that safely.  Upon recovery, install a fresh copy of the application, and restore the `data` folder.  Any customisation you may have made to the `config.yml` file also needs to be restored.
+* To backup and restore, the `data` folder, and `config.yml` needs to be backed up.  To restore, simply install a fresh instance, and replace the `data` folder and `configy.yml` files.
 * You can start the dashboard with a custom `config.yml` file by starting the `app.py` with the path to the new config, for example:
 
 ```bash
 python app.py my_other_config.yml
 ```
+
+### Loading a csv file locally
+
+One particular use case I had was to be able to load data into the parquet file without the need to spin up the entire dashboard.  The `api.py` script allows you to feed a csv file, without the need to spin up the instance.
+
+* Prepare a csv file using the same data format as described above.
+* run `python api.py config.yml csv_data.csv`
+
+Note that you need to provide the config file as well as the csv file.  The parquet files will be updated as per normal, and any subsequent start of the dashboard will read the data in the same way.
 
 ### AWS EC2 Instance
 
