@@ -120,7 +120,7 @@ def save_data(df):
             except:
                 pass
         # == merge the new metric
-        if orig_df.empty():
+        if orig_df.empty:
             df_detail = df
         else:
             df_detail = pd.concat([df,orig_df], ignore_index=True)
