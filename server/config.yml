@@ -2,6 +2,7 @@ dimensions:   # specify the dimension field name (used in the csv file) and the 
   business_unit: Business Unit
   team: Team
   location: Location
+  category: Domain
 tokens:     # an array of bearer tokens that are acceptable for use by the producer.  CHANGE THESE BEFORE YOU GO LIVE
   - 6002920168C3253430A653E16AD36EE88F6E3C7D917A5F245F735D96ABDA67FE
 secret_key: FB7E8E6841E29B45B1158029C9606D43FA8083704EBA83EC620FAD2373BDAEBE  # change this token before you go live.  This is used to encrypt the session tokens

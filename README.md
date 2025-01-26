@@ -224,20 +224,22 @@ This configuration file is crucial for setting up and securing the Flask-based d
 
 * The `compliance` field is a float, a percentage of compliance if you will.  That means that when you decide compliance for a particular resource, you could infact define _partial_ compliance.
 * To backup and restore, the `data` folder, and `config.yml` needs to be backed up.  To restore, simply install a fresh instance, and replace the `data` folder and `configy.yml` files.
-* You can start the dashboard with a custom `config.yml` file by starting the `app.py` with the path to the new config, for example:
+* You can start the dashboard with a custom `config.yml` file by starting the `app.py` with the `-config` parameter to the new config, for example:
 
 ```bash
-python app.py my_other_config.yml
+python app.py -config my_other_config.yml
 ```
 
-### Loading a csv file locally
+### Loading a data file locally
 
 One particular use case I had was to be able to load data into the parquet file without the need to spin up the entire dashboard.  The `api.py` script allows you to feed a csv file, without the need to spin up the instance.
 
 * Prepare a csv file using the same data format as described above.
-* run `python api.py config.yml csv_data.csv`
+* run `python api.py -load csv_data.csv`
 
-Note that you need to provide the config file as well as the csv file.  The parquet files will be updated as per normal, and any subsequent start of the dashboard will read the data in the same way.
+The load process will support the loading of `.csv`, `.json` or `.parquet` files depending on their file extension, provided they follow the same data load schema.
+
+The parquet files will be updated as per normal, and any subsequent start of the dashboard will read the data in the same way.
 
 ### AWS EC2 Instance
 
@@ -253,3 +255,6 @@ cd server
 gunicorn -w 4 -b 0.0.0.0:8080 app:server &
 ```
 
+### Docker
+
+See the [cyber-metrics-docker](https://github.com/massyn/cyber-metrics-docker) project on how to run this dashboard as a Docker container.

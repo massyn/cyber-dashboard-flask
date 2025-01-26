@@ -1,6 +1,6 @@
 import yaml
-import sys
 import pandas as pd
+import argparse
 
 def load_summary():
     config = read_config()
@@ -11,13 +11,19 @@ def load_detail():
     return pd.read_parquet(config['data']['detail'])
 
 def read_config():
-    if len(sys.argv) > 1:
-        print(f"Reading config from {sys.argv[1]}")
-        with open(sys.argv[1], "r") as f:
-            config = yaml.safe_load(f)
-    else:
-        with open("config.yml", "r") as f:
-            config = yaml.safe_load(f)
+    parser = argparse.ArgumentParser(description='Cyber Dashboard - Flask')
+    parser.add_argument('-config',help='Path to the config.yml file',default="config.yml")
+    parser.add_argument('-load',help='Path to a csv file to be loaded by the api call',default=None)
+
+    args = parser.parse_args()
+ 
+    with open(args.config, "r") as f:
+        config = yaml.safe_load(f)
+
+    config['cli'] = {
+        'load' : args.load
+    }
+
     return config
 
 def data_last_12_items(df):

@@ -2,9 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 import os
 from io import StringIO
-import datetime
 from library import read_config
-import sys
 
 config = read_config()
 
@@ -13,18 +11,21 @@ api_blueprint = Blueprint('api', __name__)
 # Initialize dataset and save it to disk if it doesn't exist
 if not os.path.exists(config['data']['detail']):
     initial_data = pd.DataFrame({
-        "datestamp": pd.Series(dtype="datetime64[ns]"),
-        "metric_id": pd.Series(dtype="str"),
-        "resource": pd.Series(dtype="str"),
+        "datestamp" : pd.Series(dtype="datetime64[ns]"),
+        "metric_id" : pd.Series(dtype="str"),
+        "resource"  : pd.Series(dtype="str"),
         "compliance": pd.Series(dtype="float64"),
-        "slo": pd.Series(dtype="float64"),
-        "slo_min": pd.Series(dtype="float64"),
-        "weight": pd.Series(dtype="float64"),
-        "title": pd.Series(dtype="str"),
-        "category": pd.Series(dtype="str")
+        "slo"       : pd.Series(dtype="float64"),
+        "slo_min"   : pd.Series(dtype="float64"),
+        "weight"    : pd.Series(dtype="float64"),
+        "title"     : pd.Series(dtype="str"),
+        "category"  : pd.Series(dtype="str")
     })
-    for d in config['dimensions']:
+    new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
+    for d in new_columns:
+    #for d in config['dimensions']:
         initial_data[d] = pd.Series(dtype="str")
+        print("adding {d}")
 
     initial_data.to_parquet(config['data']['detail'], index=False)
 
@@ -195,7 +196,22 @@ def update_data():
     return jsonify({"success": False, "message": "No CSV data provided"}), 400
 
 if __name__ == '__main__':
-    # When running api as is, it takes the second command line option as a file name, and inserts that file to the dataframes
-    if len(sys.argv) > 2:
-        new_data = data_sanitise_detail(pd.read_csv(sys.argv[2]))
-        save_data(new_data)
+    if config['cli']['load'] != None:
+        file = config['cli']['load']
+        print(f"Manual load : {file}")
+        if os.path.exists(file):
+            if file.endswith('.csv'):
+                data = pd.read_csv(config['cli']['load'])
+            elif file.endswith('.parquet'):
+                data = pd.read_parquet(config['cli']['load'])
+            elif file.endswith('.json'):
+                data = pd.read_json(config['cli']['load'])
+            else:
+                print(f"Unknown file format.  Must end with either .csv, .json, or .parquet")
+                exit(1)
+
+            new_data = data_sanitise_detail(data)
+            save_data(new_data)
+        else:
+            print(f"File {config['cli']['load']} does not exist.")
+            exit(0)
