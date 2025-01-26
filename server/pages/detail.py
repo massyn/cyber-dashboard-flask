@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, callback, Input, Output, dash_table
+from dash import html, dcc, callback, Input, Output
 from library import read_config, load_summary, load_detail, data_last_12_items
 from chart_overview import generate_executive_overview_chart
 from chart_detail import generate_detail_table

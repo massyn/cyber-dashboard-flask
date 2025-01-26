@@ -1,6 +1,5 @@
 import dash
-from dash import html, dcc, callback, Input, Output, dash_table
-import dash_bootstrap_components as dbc
+from dash import html, dcc, callback, Input, Output
 from chart_overview import generate_executive_overview_chart
 from chart_dimension import generate_executive_dimension_chart
 from chart_category import generate_executive_category_chart
