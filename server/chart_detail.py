@@ -22,6 +22,7 @@ def generate_detail_table(RAG, df):
             'textAlign': 'left',
             'fontWeight': 'bold',
         },
+        # TODO - This is a bug - something in the conditional format is causing the dashboard to run in a callback loop
         # style_data_conditional=[
         #     {
         #         'if': {

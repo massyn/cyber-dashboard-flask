@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from io import StringIO
 from library import read_config
+import tabulate
 
 config = read_config()
 
@@ -23,27 +24,26 @@ if not os.path.exists(config['data']['detail']):
     })
     new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
     for d in new_columns:
-    #for d in config['dimensions']:
         initial_data[d] = pd.Series(dtype="str")
         print("adding {d}")
 
     initial_data.to_parquet(config['data']['detail'], index=False)
 
 def retention_summary(df):
-    print("starting retention")
+    df['year_month'] = df['datestamp'].dt.to_period('M')  # Extract year-month
+
     # Rule 1: Remove entries older than 13 months
-    thirteen_months_ago = pd.Timestamp.now() - pd.DateOffset(months=13)
+    thirteen_months_ago = pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(months=13))
     df = df[df['datestamp'] >= thirteen_months_ago]
 
     # Rule 2: Retain only the last datestamp per month for entries older than 40 days
-    forty_days_ago = pd.Timestamp.now() - pd.Timedelta(days=40)
+    threshold = pd.Timestamp.now() - pd.Timedelta(days=40)
 
     # Split the DataFrame into two parts
-    recent_entries = df[df['datestamp'] >= forty_days_ago]
-    older_entries = df[df['datestamp'] < forty_days_ago]
+    recent_entries = df[df['datestamp'] >= threshold]
+    older_entries = df[df['datestamp'] < threshold]
 
     # For older entries, retain only the last datestamp per month
-    older_entries['year_month'] = older_entries['datestamp'].dt.to_period('M')  # Extract year-month
     older_entries = (
         older_entries.sort_values('datestamp')
         .groupby('year_month', group_keys=False)
@@ -53,11 +53,9 @@ def retention_summary(df):
     # Combine the DataFrames back
     df_retained = pd.concat([recent_entries, older_entries], ignore_index=True)
 
-    # Optional: Drop the helper column 'year_month'
+    # Drop the helper column 'year_month'
     df_retained.drop(columns=['year_month'], inplace=True, errors='ignore')
-
-    print("retained")
-    print(df_retained)
+    
     return df_retained
 
 def data_sanitise_detail(new_data):
@@ -121,19 +119,20 @@ def save_data(df):
             except:
                 pass
         # == merge the new metric
-        df = pd.concat([df,orig_df], ignore_index=True)
+        df_detail = pd.concat([df,orig_df], ignore_index=True)
 
     # == apply the retention policy to detail data - keep only the last 2 days
+    df_detail = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=2))]
 
-    df = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=2))]
-
-    df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
-
-    df.to_parquet(config['data']['detail'], index=False)
+    df_detail['datestamp'] = pd.to_datetime(df_detail['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
+    df_detail.to_parquet(config['data']['detail'], index=False)
 
     # == pivot the summary
-    df_summary = df.groupby(['datestamp','metric_id','title','category','slo','slo_min','weight'] + list(config['dimensions'].keys())).agg({'compliance' : ['sum','count']}).reset_index()
-    df_summary.columns = ['datestamp','metric_id','title','category','slo','slo_min','weight'] + list(config['dimensions'].keys()) + ['totalok', 'total']
+    primary_columns = ['datestamp','metric_id','title','category','slo','slo_min','weight']
+    new_columns = [key for key in config['dimensions'].keys() if key not in primary_columns]
+    
+    df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : ['sum','count']}).reset_index()
+    df_summary.columns = primary_columns + new_columns + ['totalok', 'total']
 
     if os.path.exists(config['data']['summary']):
         orig_summary_df = pd.read_parquet(config['data']['summary'])
@@ -151,7 +150,9 @@ def save_data(df):
         # Concatenate the updated original DataFrame with the new summary
         df_summary = pd.concat([df_summary, orig_summary_df], ignore_index=True)
 
-    #df = retention_summary(df_summary)  # apply data retention policy to keep the summary data small
+    df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce')
+    df = retention_summary(df_summary)  # apply data retention policy to keep the summary data small
+    df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
     df_summary.to_parquet(config['data']['summary'], index=False)
     
 # Function to check if the token is valid (in the list of valid tokens)
@@ -186,14 +187,18 @@ def update_data():
             save_data(new_data)
             
             # == Cosmetic - let's just show the number back to the API for added value
-            score = new_data.groupby(['metric_id']).agg(totalok=('compliance', 'sum'), total=('compliance', 'count')).reset_index()
-            score['score'] = score['totalok'] / score['total']
+            result = display_summary(new_data)
             
-            return jsonify({"success": True, "message": f"Uploaded {len(new_data)} records", "result" : score.to_dict(orient='records')}), 200
+            return jsonify({"success": True, "message": f"Uploaded {len(new_data)} records", "result" : result}), 200
         except Exception as e:
             return jsonify({"success": False, "message": f"Failed to process CSV data: {str(e)}"}), 400
     
     return jsonify({"success": False, "message": "No CSV data provided"}), 400
+
+def display_summary(df):
+    score = df.groupby(['metric_id']).agg(totalok=('compliance', 'sum'), total=('compliance', 'count')).reset_index()
+    score['score'] = score['totalok'] / score['total']
+    return score.to_dict(orient='records')
 
 if __name__ == '__main__':
     if config['cli']['load'] != None:
@@ -212,6 +217,10 @@ if __name__ == '__main__':
 
             new_data = data_sanitise_detail(data)
             save_data(new_data)
+
+            result = display_summary(new_data)
+            print(tabulate.tabulate(result,headers="keys"))
+
         else:
             print(f"File {config['cli']['load']} does not exist.")
             exit(0)

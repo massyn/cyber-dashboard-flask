@@ -5,3 +5,4 @@ dash
 gunicorn
 pyyaml
 setuptools
+tabulate
