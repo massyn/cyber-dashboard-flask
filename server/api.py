@@ -120,7 +120,10 @@ def save_data(df):
             except:
                 pass
         # == merge the new metric
-        df_detail = pd.concat([df,orig_df], ignore_index=True)
+        if orig_df.empty():
+            df_detail = df
+        else:
+            df_detail = pd.concat([df,orig_df], ignore_index=True)
 
     # == apply the retention policy to detail data - keep only the last 2 days
     df_detail = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=2))]
