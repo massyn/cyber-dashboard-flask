@@ -3,3 +3,4 @@ pyarrow
 flask
 dash
 gunicorn
+pyyaml
