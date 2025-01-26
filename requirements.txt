@@ -4,3 +4,4 @@ flask
 dash
 gunicorn
 pyyaml
+setuptools
