@@ -13,9 +13,9 @@ brute_force:
   minutes: 3
 # -- tweak the RAG colour scheme here if you like.
 RAG:
-  red:   ['#C00000', '#000000']
-  amber: ['#FFC000', '#FFFFFF']
-  green: ['#00B050', '#000000']
+  red:   ['#C00000', '#FFFFFF']
+  amber: ['#FFC000', '#000000']
+  green: ['#00B050', '#FFFFFF']
 # provide a list of users and their passwords in sha256 format
 # CHANGE THIS OR REMOVE IT BEFORE YOU GO LIVE
 users:
