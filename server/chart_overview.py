@@ -1,7 +1,10 @@
 import plotly.express as px
 import plotly.graph_objects as go
+from dash import html
 
-def generate_executive_overview_chart(RAG,df):
+def generate_executive_overview_chart(RAG,df,title = "Executive Summary"):
+    if df.empty:
+        return html.Div("No data available for selected filters.", className="empty-message")
     q1 = (
         df.groupby(['metric_id', 'datestamp', 'weight'])
         .agg(
@@ -32,7 +35,7 @@ def generate_executive_overview_chart(RAG,df):
             "amber": RAG['amber'][0],
             "green": RAG['green'][0]
         },
-        title="Executive Summary",
+        title=title,
         text_auto=True
     )
     fig.update_yaxes(range=[0, 1], tickformat=".0%", title=None)

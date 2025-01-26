@@ -1,15 +1,11 @@
 from flask import flash, redirect, session, url_for, request, render_template, send_from_directory, jsonify
-from dash import Dash, html, dcc, Input, Output
+from dash import Dash, html, dcc, Input, Output, page_container
 import pandas as pd
 import plotly.express as px
 import datetime
 import os
-from chart_overview import generate_executive_overview_chart
-from chart_dimension import generate_executive_dimension_chart
-from chart_category import generate_executive_category_chart
-from chart_metrics import generate_executive_metrics_chart
 import hashlib
-from library import read_config
+from library import read_config, load_summary
 
 config = read_config()
 
@@ -57,9 +53,6 @@ def brute_force(ip, reset=False):
     login_attempts[ip]["last_failed_time"] = datetime.datetime.now()
     return False  # IP is not blocked
 
-# Function to load the dataset
-def load_summary():
-    return pd.read_parquet(config['data']['summary'])
 
 # Function to create Dash app
 def create_dashboard(server):
@@ -67,12 +60,12 @@ def create_dashboard(server):
         __name__,
         server=server,
         url_base_pathname='/',
-        external_stylesheets=["/static/style.css"]
+        external_stylesheets=["/static/style.css"],
+        use_pages=True
     )
 
     # Load data
     data = load_summary()
-    data_latest = data[data['datestamp'] == data['datestamp'].max()]
 
     # Dash layout
     app.layout = html.Div(className="app-container", children=[
@@ -97,25 +90,13 @@ def create_dashboard(server):
                 html.P("Visualize data interactively with customizable filters.", className="header-description"),
                 html.A("Logout", href="/logout", className="logout-link")  # Add a logout link
             ]),
-            html.Div(className="graph-container", children=[
-                dcc.Graph(id="overview-graph", className="graph overview-graph", config={"displayModeBar": False}),
-                html.Div(className="sub-graphs-container", children=[
-                    dcc.Graph(id="dimension-graph", className="graph sub-graph", config={"displayModeBar": False}),
-                    dcc.Graph(id="category-graph", className="graph sub-graph", config={"displayModeBar": False})
-                ])
-            ]),
-            html.Div(className="table-container", children=[
-                html.Div(className="metrics-header-container", children=[
-                    html.H2("Metrics", className="metrics-header")
-                ]),
-                html.Div(id="metrics-table", className="metrics-table")
-            ])
+            page_container
         ])
     ])
 
     # Generate callback inputs dynamically
-    dropdown_inputs = [Input(f"{column_name}-dropdown", "value") for column_name in filters.keys()]
-
+    #dropdown_inputs = [Input(f"{column_name}-dropdown", "value") for column_name in filters.keys()]
+    
     @server.route('/favicon.ico')
     def favicon():
         return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
@@ -168,37 +149,3 @@ def create_dashboard(server):
             dropdown_options.append(options)
 
         return dropdown_options
-
-    # Callback to update the bar chart based on selected filters
-    @app.callback(
-        [Output("overview-graph", "figure"),
-         Output("dimension-graph", "figure"),
-         Output("category-graph", "figure"),
-         Output("metrics-table", "children")],
-        dropdown_inputs
-    )
-    def update_charts(*selected_values):
-        """Update bar charts based on selected filter values."""
-        df_summary = load_summary()
-
-        # Apply filtering dynamically based on selected values
-        for selected_value, (column_name, _) in zip(selected_values, filters.items()):
-            if selected_value:
-                df_summary = df_summary[df_summary[column_name] == selected_value]
-
-        df_summary['score'] = df_summary['totalok'] / df_summary['total'] * df_summary['weight']
-
-        df_summary_latest = df_summary.merge(
-            df_summary.groupby('metric_id', as_index=False).agg({'datestamp': 'max'}),
-            on=['metric_id', 'datestamp'],
-            how='inner'
-        )
-
-        fig_overview = generate_executive_overview_chart(RAG, df_summary)
-        fig_dimension = generate_executive_dimension_chart(RAG, config['dimensions'], df_summary_latest)
-        fig_category = generate_executive_category_chart(RAG, df_summary_latest)
-        fig_metrics = generate_executive_metrics_chart(RAG, df_summary_latest)
-
-        return fig_overview, fig_dimension, fig_category, fig_metrics
-
-    return app

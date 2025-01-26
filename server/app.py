@@ -4,6 +4,7 @@ from dashboard import create_dashboard
 from library import read_config
 
 server = Flask(__name__)
+
 config = read_config()
 
 server.secret_key = config['secret_key']

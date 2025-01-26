@@ -28,11 +28,42 @@ if not os.path.exists(config['data']['detail']):
 
     initial_data.to_parquet(config['data']['detail'], index=False)
 
-def sanitize_data(new_data):
+def retention_summary(df):
+    print("starting retention")
+    # Rule 1: Remove entries older than 13 months
+    thirteen_months_ago = pd.Timestamp.now() - pd.DateOffset(months=13)
+    df = df[df['datestamp'] >= thirteen_months_ago]
+
+    # Rule 2: Retain only the last datestamp per month for entries older than 40 days
+    forty_days_ago = pd.Timestamp.now() - pd.Timedelta(days=40)
+
+    # Split the DataFrame into two parts
+    recent_entries = df[df['datestamp'] >= forty_days_ago]
+    older_entries = df[df['datestamp'] < forty_days_ago]
+
+    # For older entries, retain only the last datestamp per month
+    older_entries['year_month'] = older_entries['datestamp'].dt.to_period('M')  # Extract year-month
+    older_entries = (
+        older_entries.sort_values('datestamp')
+        .groupby('year_month', group_keys=False)
+        .tail(1)  # Keep the last entry per group
+    )
+
+    # Combine the DataFrames back
+    df_retained = pd.concat([recent_entries, older_entries], ignore_index=True)
+
+    # Optional: Drop the helper column 'year_month'
+    df_retained.drop(columns=['year_month'], inplace=True, errors='ignore')
+
+    print("retained")
+    print(df_retained)
+    return df_retained
+
+def data_sanitise_detail(new_data):
     # Sanitize the data received.
     if 'datestamp' not in new_data.columns:
-        new_data['datestamp'] = datetime.datetime.today().strftime('%Y-%m-%d')
-    new_data['datestamp'] = pd.to_datetime(new_data['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
+        new_data['datestamp'] = pd.Timestamp.now()
+    new_data['datestamp'] = pd.to_datetime(new_data['datestamp']) #, errors='coerce') #.dt.strftime('%Y-%m-%d')
     
     if 'metric_id' not in new_data.columns:
         return jsonify({"success": False, "message": f"Missing mandatory column : metric_id"}), 400
@@ -91,6 +122,12 @@ def save_data(df):
         # == merge the new metric
         df = pd.concat([df,orig_df], ignore_index=True)
 
+    # == apply the retention policy to detail data - keep only the last 2 days
+
+    df = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=2))]
+
+    df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
+
     df.to_parquet(config['data']['detail'], index=False)
 
     # == pivot the summary
@@ -113,8 +150,9 @@ def save_data(df):
         # Concatenate the updated original DataFrame with the new summary
         df_summary = pd.concat([df_summary, orig_summary_df], ignore_index=True)
 
+    #df = retention_summary(df_summary)  # apply data retention policy to keep the summary data small
     df_summary.to_parquet(config['data']['summary'], index=False)
-
+    
 # Function to check if the token is valid (in the list of valid tokens)
 def check_token(token):
     return token in config['tokens']
@@ -139,7 +177,7 @@ def update_data():
             csv_data = StringIO(request.data.decode('utf-8'))
             new_data = pd.read_csv(csv_data)
             
-            new_data = sanitize_data(new_data)
+            new_data = data_sanitise_detail(new_data)
             # == check if new_data is a dataframe.  If it is, save it.  If not, return the error message
             if not isinstance(new_data, pd.DataFrame):
                 return new_data
@@ -159,5 +197,5 @@ def update_data():
 if __name__ == '__main__':
     # When running api as is, it takes the second command line option as a file name, and inserts that file to the dataframes
     if len(sys.argv) > 2:
-        new_data = sanitize_data(pd.read_csv(sys.argv[2]))
+        new_data = data_sanitise_detail(pd.read_csv(sys.argv[2]))
         save_data(new_data)
