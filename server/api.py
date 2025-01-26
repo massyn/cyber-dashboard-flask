@@ -30,6 +30,7 @@ if not os.path.exists(config['data']['detail']):
     initial_data.to_parquet(config['data']['detail'], index=False)
 
 def retention_summary(df):
+    df['datestamp'] = pd.to_datetime(df['datestamp'])
     df['year_month'] = df['datestamp'].dt.to_period('M')  # Extract year-month
 
     # Rule 1: Remove entries older than 13 months
