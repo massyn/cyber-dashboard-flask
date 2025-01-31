@@ -249,10 +249,8 @@ You can run the code on an AWS EC2 instance.  Deploy an `Amazon Linux 2023` inst
 #!/bin/sh
 sudo yum install -y git python3-pip
 git clone https://github.com/massyn/cyber-dashboard-flask
-cd cyber-dashboard-flask
-pip install -r requirements.txt
-cd server
-gunicorn -w 4 -b 0.0.0.0:8080 app:server &
+cd cyber-dashboard-flask/amazon_linux
+sh install.sh
 ```
 
 ### Docker

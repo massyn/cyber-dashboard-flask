@@ -6,7 +6,7 @@ cp flaskapp.service /etc/systemd/system/flaskapp.service
 sudo systemctl start flaskapp
 sudo systemctl enable flaskapp
 
-sudo amazon-linux-extras install nginx1
+sudo yum install nginx -y
 cp nginx.conf /etc/nginx/conf.d/app.conf
 sudo systemctl start nginx
 sudo systemctl enable nginx
