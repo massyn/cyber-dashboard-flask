@@ -1,6 +1,6 @@
 import yaml
 import pandas as pd
-import argparse
+import sys
 
 def load_summary():
     config = read_config()
@@ -11,18 +11,23 @@ def load_detail():
     return pd.read_parquet(config['data']['detail'])
 
 def read_config():
-    parser = argparse.ArgumentParser(description='Cyber Dashboard - Flask')
-    parser.add_argument('-config',help='Path to the config.yml file',default="config.yml")
-    parser.add_argument('-load',help='Path to a csv file to be loaded by the api call',default=None)
+    config_path = "config.yml"
+    load_path = None
 
-    args = parser.parse_args()
- 
-    with open(args.config, "r") as f:
+    # Only parse args if running as a script (not under Gunicorn)
+    if hasattr(sys, "argv") and len(sys.argv) > 1:
+        import argparse
+        parser = argparse.ArgumentParser(description='Cyber Dashboard - Flask')
+        parser.add_argument('-config', help='Path to the config.yml file', default="config.yml")
+        parser.add_argument('-load', help='Path to a CSV file to be loaded by the API call', default=None)
+        args, _ = parser.parse_known_args()
+        config_path = args.config
+        load_path = args.load
+
+    with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
-    config['cli'] = {
-        'load' : args.load
-    }
+    config['cli'] = {'load': load_path}
 
     return config
 
