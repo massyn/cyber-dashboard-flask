@@ -1,0 +1,10 @@
+[Unit]
+Description=Gunicorn daemon to serve my flaskapp
+After=network.target
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/cyber-dashboard-flask/server
+ExecStart=gunicorn app:server
+[Install]
+WantedBy=multi-user.target
