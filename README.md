@@ -171,20 +171,6 @@ data:
   summary: ../data/summary.parquet
 ```
 
-### `brute_force`
-Configuration for brute force attack detection, specifying the threshold for identifying suspicious activity.
-
-- **count**: The number of failed login attempts considered suspicious within a given time period.
-- **minutes**: The time window in minutes for counting failed login attempts. If the count exceeds this threshold within the specified time, it triggers an alert for potential brute force activity.
-
-Example:
-```yaml
-brute_force:
-  count: 100
-  minutes: 3
-```
-In this example, if there are more than 100 failed login attempts within 3 minutes, the system will flag this activity.
-
 ### `RAG` (Red-Amber-Green Color Scheme)
 This section defines the color scheme for the dashboard's Risk, Alert, and Guard (RAG) indicators. You can tweak these colors to match your visual preference.
 
@@ -200,25 +186,18 @@ RAG:
   green: ['#00B050', '#000000']
 ```
 
-### `users`
-A list of authorized users and their associated password hashes in SHA-256 format. This section must be updated or removed before going live to ensure that the credentials are secure.
-
-- **user**: A username paired with a SHA-256 hashed password. In the example below, the password "password123" has been hashed to `ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f`.
-
-Example:
-```yaml
-users:
-  user: ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f  # password123
-```
-- **Note**: Before going live, make sure to replace this with actual users and strong password hashes.
-
 ### Security Considerations:
 - **Tokens** and **secret keys** must be kept confidential and secure. Do not hard-code them in public repositories.
-- Regularly update your **users** and **password hashes** to ensure they remain secure.
 - Review the **RAG color scheme** and adjust the colors for visual clarity, especially if accessibility is a concern.
+- This configuration file is crucial for setting up and securing the Flask-based dashboard. Ensure that all fields are properly configured and that sensitive data is handled securely before going live.
 
-This configuration file is crucial for setting up and securing the Flask-based dashboard. Ensure that all fields are properly configured and that sensitive data is handled securely before going live.
+## Production deployment
 
+While the `app.py` script can be executed locally, you should not run this on a production system, or have this exposed to the internet.  Instead, being a Flask application, you should deploy the dashboard either with [Gunicorn](https://developers.redhat.com/articles/2023/08/17/how-deploy-flask-application-python-gunicorn#the_application) or [Waitress](https://flask.palletsprojects.com/en/stable/tutorial/deploy/)
+
+You should also deploy something like an [Nginx Reverse Proxy](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-20-04) to provide an additional layer of isolation between your app and the internet.
+
+With Nginx, you have the option of restricting access using [basic authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/) or hook it up to an IDP like [Okta](https://developer.okta.com/blog/2018/08/28/nginx-auth-request)
 
 ## Additional tops for success
 

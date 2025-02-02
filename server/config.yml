@@ -1,3 +1,5 @@
+title: Updated from the config file
+stale_metric: 2 # how many days do we show a metric that has not been loaded
 dimensions:   # specify the dimension field name (used in the csv file) and the label to show on the dashboard
   business_unit: Business Unit
   team: Team
@@ -6,19 +8,13 @@ dimensions:   # specify the dimension field name (used in the csv file) and the 
 tokens:     # an array of bearer tokens that are acceptable for use by the producer.  CHANGE THESE BEFORE YOU GO LIVE
   - 6002920168C3253430A653E16AD36EE88F6E3C7D917A5F245F735D96ABDA67FE
 secret_key: FB7E8E6841E29B45B1158029C9606D43FA8083704EBA83EC620FAD2373BDAEBE  # change this token before you go live.  This is used to encrypt the session tokens
+# -- where would you like to store the target parquet files?
 data:
   detail: ../data/detail.parquet
   summary: ../data/summary.parquet
-brute_force:
-  count: 100
-  minutes: 3
 # -- tweak the RAG colour scheme here if you like.
 RAG:
   red:   ['#C00000', '#FFFFFF']
   amber: ['#FFC000', '#000000']
   green: ['#00B050', '#FFFFFF']
-# provide a list of users and their passwords in sha256 format
-# CHANGE THIS OR REMOVE IT BEFORE YOU GO LIVE
-users:
-  user: ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f  # password123
   

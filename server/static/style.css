@@ -235,3 +235,9 @@ body {
     background-color: #0056b3;
     color: white;
 }
+
+.footer-text {
+    margin: 5px 0;
+    color: #777;
+    font-size: 9px;
+}

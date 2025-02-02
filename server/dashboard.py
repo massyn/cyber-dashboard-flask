@@ -1,21 +1,15 @@
-from flask import flash, redirect, session, url_for, request, render_template, send_from_directory, jsonify
+from flask import flash, redirect, url_for, render_template, send_from_directory, jsonify
 from dash import Dash, html, dcc, Input, Output, page_container
 import pandas as pd
-import plotly.express as px
-import datetime
+#import plotly.express as px
+#import datetime
 import os
-import hashlib
 from library import read_config, load_summary
 
 config = read_config()
 
 filters = config['dimensions']
 RAG = config['RAG']
-
-# Configuration for brute force detection
-FAILED_ATTEMPTS_LIMIT = config.get('brute_force',{}).get('count',10)
-BLOCK_DURATION = datetime.timedelta(minutes=config.get('brute_force',{}).get('minutes',5))
-login_attempts = {}
 
 if not os.path.exists(config['data']['summary']):
     initial_data = pd.DataFrame({
@@ -34,26 +28,6 @@ if not os.path.exists(config['data']['summary']):
 
     initial_data.to_parquet(config['data']['summary'], index=False)
 
-def brute_force(ip, reset=False):
-    if reset or ip not in login_attempts:
-        login_attempts[ip] = {"failed_count": 0, "last_failed_time": None}
-        return False
-
-    # Check if IP is currently blocked
-    attempts = login_attempts[ip]
-    if attempts["failed_count"] >= FAILED_ATTEMPTS_LIMIT:
-        if datetime.datetime.now() - attempts["last_failed_time"] < BLOCK_DURATION:
-            return True  # IP is blocked, return True for block status
-        else:
-            # Reset failed attempts after block duration expires
-            login_attempts[ip] = {"failed_count": 0, "last_failed_time": None}
-
-    # Increment the counter and update the last failed time
-    login_attempts[ip]["failed_count"] += 1
-    login_attempts[ip]["last_failed_time"] = datetime.datetime.now()
-    return False  # IP is not blocked
-
-
 # Function to create Dash app
 def create_dashboard(server):
     app = Dash(
@@ -67,6 +41,8 @@ def create_dashboard(server):
     # Load data
     data = load_summary()
 
+    initial_options = get_dropdown_options()
+
     # Dash layout
     app.layout = html.Div(className="app-container", children=[
         html.Div(className="sidebar", children=[
@@ -76,7 +52,7 @@ def create_dashboard(server):
                     html.Label(f"Select a {label}:", className="dropdown-label"),
                     dcc.Dropdown(
                         id=f"{column_name}-dropdown",
-                        options=[],  # Start with an empty list; options are populated by the callback
+                        options=initial_options.get(column_name, []),
                         value=None,
                         placeholder=f"Select a {label}",
                         className="dropdown"
@@ -87,65 +63,37 @@ def create_dashboard(server):
         html.Div(className="main-content", children=[
             html.Div(className="header", children=[
                 html.H1("Continuous Assurance", className="header-title"),
-                html.P("Visualize data interactively with customizable filters.", className="header-description"),
-                html.A("Logout", href="/logout", className="logout-link")  # Add a logout link
+                html.P(config.get('title','Set the "title" field in config.yml'), className="header-description"),
+                # html.P("Build 1.2.3", className="footer-text")
             ]),
             page_container
         ])
     ])
 
-    # Generate callback inputs dynamically
-    #dropdown_inputs = [Input(f"{column_name}-dropdown", "value") for column_name in filters.keys()]
-    
     @server.route('/favicon.ico')
     def favicon():
         return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
-    @server.route('/login', methods=['GET', 'POST'])
-    def login():
-        if request.method == 'POST':
-            username = request.form['username']
-            password = request.form['password']
-
-            # check if the username and password matches
-            if username in config['users'] and hashlib.sha256(password.encode()).hexdigest().lower() == config['users'].get(username,'').lower():
-                session['logged_in'] = True
-                return redirect(url_for('/'))
-            else:
-                flash('Invalid username or password.', 'error')
-
-        return render_template('login.html')
-
-    @server.route('/logout')
-    def logout():
-        session.pop('logged_in', None)
-        flash('You have been logged out.', 'info')
-        return redirect(url_for('login'))
-
-    @server.before_request
-    def require_login():
-        # Check if IP is blocked and return 429 if blocked
-        ip = request.remote_addr
-        if brute_force(ip):
-            return jsonify({"error": "Too many failed attempts. Try again later."}), 429
-        # Skip login check for static files and the login endpoint
-        if request.endpoint not in ('login', 'static','/_favicon.ico','api.update_data') and not session.get('logged_in'):
-            return redirect(url_for('login'))
-
+    
     @app.callback(
         [Output(f"{column_name}-dropdown", "options") for column_name in filters.keys()],
-        [Input("overview-graph", "id")]
+        [
+            Input("overview-graph", "id")
+            #,Input("overview-detail-graph", "id")
+        ]
     )
     def update_dropdown_options(_):
-        """Update the dropdown options dynamically based on the latest data."""
-        df_summary = load_summary()
-        data_latest = df_summary[df_summary['datestamp'] == df_summary['datestamp'].max()]
+        return list(get_dropdown_options().values())
 
-        # Create updated options for each filter
-        dropdown_options = []
-        for column_name in filters.keys():
-            unique_values = data_latest.get(column_name, pd.Series()).unique()
-            options = [{"label": value, "value": value} for value in sorted(unique_values)]
-            dropdown_options.append(options)
+def get_dropdown_options():
+    df_summary = load_summary()
+    
+    if df_summary.empty:
+        return {col: [] for col in filters.keys()}  # Return empty lists if no data
 
-        return dropdown_options
+    data_latest = df_summary[df_summary['datestamp'] == df_summary['datestamp'].max()]
+    dropdown_options = {
+        column_name: [{"label": value, "value": value} for value in sorted(data_latest[column_name].dropna().unique())]
+        for column_name in filters.keys()
+    }
+    
+    return dropdown_options

@@ -16,6 +16,7 @@ if not os.path.exists(config['data']['detail']):
         "metric_id" : pd.Series(dtype="str"),
         "resource"  : pd.Series(dtype="str"),
         "compliance": pd.Series(dtype="float64"),
+        "detail"    : pd.Series(dtype="str"),
         "slo"       : pd.Series(dtype="float64"),
         "slo_min"   : pd.Series(dtype="float64"),
         "weight"    : pd.Series(dtype="float64"),
@@ -74,6 +75,9 @@ def data_sanitise_detail(new_data):
     if 'category' not in new_data.columns:
         new_data['category'] = 'undefined'
 
+    if 'detail' not in new_data.columns:
+        new_data['detail'] = ''
+
     if 'compliance' not in new_data.columns:
         new_data['compliance'] = 0
 
@@ -104,12 +108,11 @@ def data_sanitise_detail(new_data):
     
     # == let's clean up any columns that should not be there
     for c in new_data.columns:
-        if c not in config['dimensions'] and c not in ['metric_id','resource','compliance','slo','slo_min','weight','title','category','datestamp']:
+        if c not in config['dimensions'] and c not in ['metric_id','resource','compliance','detail','slo','slo_min','weight','title','category','datestamp']:
             del new_data[c]
 
     return new_data
 
-# Function to save the dataset
 def save_data(df):
     if os.path.exists(config['data']['detail']):
         orig_df = pd.read_parquet(config['data']['detail'])
@@ -126,7 +129,7 @@ def save_data(df):
             df_detail = pd.concat([df,orig_df], ignore_index=True)
 
     # == apply the retention policy to detail data - keep only the last 2 days
-    df_detail = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=2))]
+    df_detail = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=config.get('stale_metric',2)))]
 
     df_detail['datestamp'] = pd.to_datetime(df_detail['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
     df_detail.to_parquet(config['data']['detail'], index=False)
