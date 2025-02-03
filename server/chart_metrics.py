@@ -3,6 +3,7 @@ from dash import dash_table,html
 def generate_executive_metrics_chart(RAG, df):
     if df.empty:
         return html.Div("No data available for selected filters.", className="empty-message")
+
     q1 = (
         df.groupby(['metric_id', 'title'])
         .agg(

@@ -45,29 +45,36 @@ def create_dashboard(server):
 
     # Dash layout
     app.layout = html.Div(className="app-container", children=[
-        html.Div(className="sidebar", children=[
-            html.H2("Filters", className="sidebar-header"),
-            html.Div(className="filters-container", children=[
-                html.Div([
-                    html.Label(f"Select a {label}:", className="dropdown-label"),
-                    dcc.Dropdown(
-                        id=f"{column_name}-dropdown",
-                        options=initial_options.get(column_name, []),
-                        value=None,
-                        placeholder=f"Select a {label}",
-                        className="dropdown"
-                    )
-                ], className="filter-item") for column_name, label in filters.items()],
-            )
+        html.Header(className="header", children=[
+            html.H1("Continuous Assurance", className="header-title"),
+            html.P(config.get('title', 'Set the "title" field in config.yml'), className="header-description"),
         ]),
-        html.Div(className="main-content", children=[
-            html.Div(className="header", children=[
-                html.H1("Continuous Assurance", className="header-title"),
-                html.P(config.get('title','Set the "title" field in config.yml'), className="header-description"),
-                # html.P("Build 1.2.3", className="footer-text")
+        
+        html.Div(className="main-container", children=[  
+            html.Aside(className="sidebar", children=[
+                html.H2("Filters", className="sidebar-header"),
+                html.Div(className="filters-container", children=[
+                    html.Div([
+                        html.Label(f"Select a {label}:", className="dropdown-label"),
+                        dcc.Dropdown(
+                            id=f"{column_name}-dropdown",
+                            options=initial_options.get(column_name, []),
+                            value=None,
+                            placeholder=f"Select a {label}",
+                            className="dropdown"
+                        )
+                    ], className="filter-item") for column_name, label in filters.items()
+                ])
             ]),
-            page_container
-        ])
+            
+            html.Main(className="content", children=[
+                html.Div(className="page-content", children=[page_container])
+            ])
+        ]),
+        
+        # html.Footer(className="footer", children=[
+        #     html.P("Footer text here")
+        # ])
     ])
 
     @server.route('/favicon.ico')
