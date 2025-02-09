@@ -16,6 +16,7 @@ if not os.path.exists(config['data']['detail']):
         "metric_id" : pd.Series(dtype="str"),
         "resource"  : pd.Series(dtype="str"),
         "compliance": pd.Series(dtype="float64"),
+        "count"     : pd.Series(dtype="float64"),
         "detail"    : pd.Series(dtype="str"),
         "slo"       : pd.Series(dtype="float64"),
         "slo_min"   : pd.Series(dtype="float64"),
@@ -81,6 +82,9 @@ def data_sanitise_detail(new_data):
     if 'compliance' not in new_data.columns:
         new_data['compliance'] = 0
 
+    if 'count' not in new_data.columns:
+        new_data['count'] = 1
+
     if 'title' not in new_data.columns:
         new_data['title'] = new_data['metric_id']
     
@@ -94,7 +98,7 @@ def data_sanitise_detail(new_data):
         new_data['weight'] = 0.5
     
     # Check if the float values are between 0 and 1
-    for f in ['slo','slo_min','weight','compliance']:
+    for f in ['slo','slo_min','weight']:
         if not new_data[f].between(0, 1).all():
             return jsonify({"success": False, "message": f"Values in '{f}' column must be between 0 and 1"}), 400
     
@@ -108,7 +112,7 @@ def data_sanitise_detail(new_data):
     
     # == let's clean up any columns that should not be there
     for c in new_data.columns:
-        if c not in config['dimensions'] and c not in ['metric_id','resource','compliance','detail','slo','slo_min','weight','title','category','datestamp']:
+        if c not in config['dimensions'] and c not in ['metric_id','resource','compliance','count','detail','slo','slo_min','weight','title','category','datestamp']:
             del new_data[c]
 
     return new_data
@@ -131,6 +135,9 @@ def save_data(df):
     # == apply the retention policy to detail data - keep only the last 2 days
     df_detail = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=config.get('stale_metric',2)))]
 
+    if 'count' not in df_detail.columns:
+        df_detail['count'] = 1
+
     df_detail['datestamp'] = pd.to_datetime(df_detail['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
     df_detail.to_parquet(config['data']['detail'], index=False)
 
@@ -138,7 +145,8 @@ def save_data(df):
     primary_columns = ['datestamp','metric_id','title','category','slo','slo_min','weight']
     new_columns = [key for key in config['dimensions'].keys() if key not in primary_columns]
     
-    df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : ['sum','count']}).reset_index()
+    #df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : ['sum','count']}).reset_index()
+    df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : 'sum' , 'count' : 'sum'}).reset_index()
     df_summary.columns = primary_columns + new_columns + ['totalok', 'total']
 
     if os.path.exists(config['data']['summary']):
