@@ -8,9 +8,9 @@ def generate_executive_overview_chart(RAG,df,title = "Executive Summary"):
     q1 = (
         df.groupby(['metric_id', 'datestamp', 'weight'])
         .agg(
-            weighted_score=('totalok', lambda x: x.sum() / df.loc[x.index, 'total'].sum() * df.loc[x.index, 'weight'].iloc[0]),
-            slo_min=('slo_min', 'mean'),
-            slo=('slo', 'mean'),
+            weighted_score   = ('totalok', lambda x: x.sum() / df.loc[x.index, 'total'].sum() * df.loc[x.index, 'weight'].iloc[0]),
+            weighted_slo     = ('slo'    , lambda x: x.mean() * df.loc[x.index, 'weight'].iloc[0]),
+            weighted_slo_min = ('slo_min', lambda x: x.mean() * df.loc[x.index, 'weight'].iloc[0]),
         )
         .reset_index()
     )
@@ -18,9 +18,9 @@ def generate_executive_overview_chart(RAG,df,title = "Executive Summary"):
     result = (
         q1.groupby('datestamp')
         .agg(
-            score=('weighted_score', lambda x: x.sum() / q1.loc[x.index, 'weight'].sum()),
-            slo_min=('slo_min', 'mean'),
-            slo=('slo', 'mean'),
+            score   = ('weighted_score'   , lambda x: x.sum() / q1.loc[x.index, 'weight'].sum()),
+            slo_min = ('weighted_slo_min' , lambda x: x.sum() / q1.loc[x.index, 'weight'].sum()),
+            slo     = ('weighted_slo'     , lambda x: x.sum() / q1.loc[x.index, 'weight'].sum()),
         )
         .reset_index()
     )

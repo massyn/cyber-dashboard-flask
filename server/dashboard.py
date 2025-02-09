@@ -1,8 +1,6 @@
 from flask import flash, redirect, url_for, render_template, send_from_directory, jsonify
 from dash import Dash, html, dcc, Input, Output, page_container
 import pandas as pd
-#import plotly.express as px
-#import datetime
 import os
 from library import read_config, load_summary
 
@@ -76,10 +74,6 @@ def create_dashboard(server):
         #     html.P("Footer text here")
         # ])
     ])
-
-    @server.route('/favicon.ico')
-    def favicon():
-        return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
     
     @app.callback(
         [Output(f"{column_name}-dropdown", "options") for column_name in filters.keys()],

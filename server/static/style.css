@@ -23,6 +23,11 @@
     background: #f4f4f4;
     padding: 1rem;
     flex-shrink: 0;  /* Prevents sidebar from collapsing */
+    gap: 1rem;
+}
+
+.filter-item {
+    margin-bottom: 1rem; /* Adds space between each filter */
 }
 
 .content {
