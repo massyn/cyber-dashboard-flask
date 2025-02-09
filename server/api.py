@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 import os
 from io import StringIO
-from library import read_config
+from library import read_config, cloud_storage_write
 import tabulate
 
 config = read_config()
@@ -140,6 +140,7 @@ def save_data(df):
 
     df_detail['datestamp'] = pd.to_datetime(df_detail['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
     df_detail.to_parquet(config['data']['detail'], index=False)
+    cloud_storage_write(config['data']['detail'])
 
     # == pivot the summary
     primary_columns = ['datestamp','metric_id','title','category','slo','slo_min','weight']
@@ -169,6 +170,7 @@ def save_data(df):
     df = retention_summary(df_summary)  # apply data retention policy to keep the summary data small
     df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
     df_summary.to_parquet(config['data']['summary'], index=False)
+    cloud_storage_write(config['data']['summary'])
     
 # Function to check if the token is valid (in the list of valid tokens)
 def check_token(token):

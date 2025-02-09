@@ -59,7 +59,7 @@ def update_charts(*selected_values):
     fig_dimension = generate_executive_dimension_chart(RAG, config['dimensions'], df_summary_latest)
     fig_category = generate_executive_category_chart(RAG, df_summary_latest)
     
-    df_summary_latest = df_summary_latest[df_summary_latest['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=config.get('stale_metric',2)))]
+    df_summary_latest = df_summary_latest[df_summary_latest['datestamp'] >= pd.to_datetime(pd.Timestamp.utcnow() - pd.DateOffset(days=config.get('stale_metric',2)))]
     fig_metrics = generate_executive_metrics_chart(RAG, df_summary_latest)
 
     return fig_overview, fig_dimension, fig_category, fig_metrics

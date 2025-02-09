@@ -1,6 +1,9 @@
 import yaml
 import pandas as pd
 import sys
+import boto3
+from botocore.exceptions import ClientError
+import os
 
 def load_summary():
     config = read_config()
@@ -61,3 +64,45 @@ def data_last_12_items(df):
     df_filtered = df_filtered[df_filtered['datestamp'].isin(selected_datestamps['datestamp'])]
     df_filtered['datestamp'] = pd.to_datetime(df_filtered['datestamp']).dt.strftime('%Y-%m-%d')
     return df_filtered
+
+def cloud_storage_write(local_file):
+    if 'AWS_S3_BUCKET' in os.environ and os.environ['AWS_S3_BUCKET'].startswith('s3://'):
+        target_key = f"{os.environ['AWS_S3_BUCKET']}/{os.path.basename(local_file)}"
+        if not os.path.exists(local_file):
+            print(f"WARNING - Not uploading to S3 because {local_file} does not exist")
+            return False
+        
+        print(f"Uploading {local_file} to {target_key}...")
+
+        bucket = target_key.split('/')[2]
+        key = '/'.join(target_key.split('/')[3:])
+        
+        s3_client = boto3.client('s3')
+        try:
+            s3_client.upload_file(local_file, bucket, key, ExtraArgs={'ACL': 'bucket-owner-full-control'})
+            print("AWS S3 Upload complete.")
+        except ClientError as e:
+            print(f"AWS S3 Upload ERROR : {e}")
+            return False
+        return True
+
+def cloud_storage_read(local_file,overwrite=False):
+    if 'AWS_S3_BUCKET' in os.environ and os.environ['AWS_S3_BUCKET'].startswith('s3://'):
+        target_key = f"{os.environ['AWS_S3_BUCKET']}/{os.path.basename(local_file)}"
+        if os.path.exists(local_file) and not overwrite:
+            print(f"WARNING - Not downloading to S3 because {local_file} already exists")
+            return False
+        
+        print(f"Downloading {target_key} to {local_file}...")
+
+        bucket = target_key.split('/')[2]
+        key = '/'.join(target_key.split('/')[3:])
+        
+        s3_client = boto3.client('s3')
+        try:
+            s3_client.download_file(bucket, key)
+            print("AWS S3 Download complete.")
+            return True
+        except ClientError as e:
+            print(f"AWS S3 Download ERROR : {e}")
+            return False

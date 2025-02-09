@@ -1,11 +1,15 @@
 from flask import Flask
 from api import api_blueprint
 from dashboard import create_dashboard
-from library import read_config
+from library import read_config, cloud_storage_read
 
 server = Flask(__name__)
 
 config = read_config()
+
+# == get the files from the storage account, but don't overwrite it if they already exist
+cloud_storage_read(config['data']['summary'],False)
+cloud_storage_read(config['data']['detail'],False)
 
 server.secret_key = config['secret_key']
 
