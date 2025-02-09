@@ -220,18 +220,6 @@ The load process will support the loading of `.csv`, `.json` or `.parquet` files
 
 The parquet files will be updated as per normal, and any subsequent start of the dashboard will read the data in the same way.
 
-### AWS EC2 Instance
-
-You can run the code on an AWS EC2 instance.  Deploy an `Amazon Linux 2023` instance.  Using the following UserData code will spawn a fresh server.
-
-```bash
-#!/bin/sh
-sudo yum install -y git python3-pip
-git clone https://github.com/massyn/cyber-dashboard-flask
-cd cyber-dashboard-flask/amazon_linux
-sh install.sh
-```
-
 ### Docker
 
 See the [cyber-metrics-docker](https://github.com/massyn/cyber-metrics-docker) project on how to run this dashboard as a Docker container.
