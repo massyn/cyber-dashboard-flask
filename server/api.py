@@ -132,9 +132,6 @@ def save_data(df):
         else:
             df_detail = pd.concat([df,orig_df], ignore_index=True)
 
-    # == apply the retention policy to detail data - keep only the last 2 days
-    df_detail = df[df['datestamp'] >= pd.to_datetime(pd.Timestamp.now() - pd.DateOffset(days=config.get('stale_metric',2)))]
-
     if 'count' not in df_detail.columns:
         df_detail['count'] = 1
 
