@@ -7,10 +7,55 @@ import os
 
 def load_summary():
     config = read_config()
+
+    # == get the files from the storage account, but don't overwrite it if they already exist
+    if not cloud_storage_read(config['data']['summary'],False):
+        if not os.path.exists(config['data']['summary']):
+            initial_data = pd.DataFrame({
+                "datestamp": pd.Series(dtype="datetime64[ns]"),
+                "metric_id": pd.Series(dtype="str"),
+                "total": pd.Series(dtype="float64"),
+                "totalok": pd.Series(dtype="float64"),
+                "slo": pd.Series(dtype="float64"),
+                "slo_min": pd.Series(dtype="float64"),
+                "weight": pd.Series(dtype="float64"),
+                "title": pd.Series(dtype="str"),
+                "category": pd.Series(dtype="str")
+            })
+            for d in config['dimensions']:
+                initial_data[d] = pd.Series(dtype="str")
+
+            initial_data.to_parquet(config['data']['summary'], index=False)
+
     return pd.read_parquet(config['data']['summary'])
 
 def load_detail():
     config = read_config()
+
+    # == read the cloud storage
+    if not cloud_storage_read(config['data']['detail'],False):
+        # Initialize dataset and save it to disk if it doesn't exist
+        if not os.path.exists(config['data']['detail']):
+            initial_data = pd.DataFrame({
+                "datestamp" : pd.Series(dtype="datetime64[ns]"),
+                "metric_id" : pd.Series(dtype="str"),
+                "resource"  : pd.Series(dtype="str"),
+                "compliance": pd.Series(dtype="float64"),
+                "count"     : pd.Series(dtype="float64"),
+                "detail"    : pd.Series(dtype="str"),
+                "slo"       : pd.Series(dtype="float64"),
+                "slo_min"   : pd.Series(dtype="float64"),
+                "weight"    : pd.Series(dtype="float64"),
+                "title"     : pd.Series(dtype="str"),
+                "category"  : pd.Series(dtype="str")
+            })
+            new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
+            for d in new_columns:
+                initial_data[d] = pd.Series(dtype="str")
+                print("adding {d}")
+
+            initial_data.to_parquet(config['data']['detail'], index=False)
+
     return pd.read_parquet(config['data']['detail'])
 
 def read_config():

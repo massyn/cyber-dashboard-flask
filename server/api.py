@@ -9,28 +9,6 @@ config = read_config()
 
 api_blueprint = Blueprint('api', __name__)
 
-# Initialize dataset and save it to disk if it doesn't exist
-if not os.path.exists(config['data']['detail']):
-    initial_data = pd.DataFrame({
-        "datestamp" : pd.Series(dtype="datetime64[ns]"),
-        "metric_id" : pd.Series(dtype="str"),
-        "resource"  : pd.Series(dtype="str"),
-        "compliance": pd.Series(dtype="float64"),
-        "count"     : pd.Series(dtype="float64"),
-        "detail"    : pd.Series(dtype="str"),
-        "slo"       : pd.Series(dtype="float64"),
-        "slo_min"   : pd.Series(dtype="float64"),
-        "weight"    : pd.Series(dtype="float64"),
-        "title"     : pd.Series(dtype="str"),
-        "category"  : pd.Series(dtype="str")
-    })
-    new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
-    for d in new_columns:
-        initial_data[d] = pd.Series(dtype="str")
-        print("adding {d}")
-
-    initial_data.to_parquet(config['data']['detail'], index=False)
-
 def retention_summary(df):
     df['datestamp'] = pd.to_datetime(df['datestamp'])
     df['year_month'] = df['datestamp'].dt.to_period('M')  # Extract year-month

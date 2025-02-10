@@ -9,23 +9,6 @@ config = read_config()
 filters = config['dimensions']
 RAG = config['RAG']
 
-if not os.path.exists(config['data']['summary']):
-    initial_data = pd.DataFrame({
-        "datestamp": pd.Series(dtype="datetime64[ns]"),
-        "metric_id": pd.Series(dtype="str"),
-        "total": pd.Series(dtype="float64"),
-        "totalok": pd.Series(dtype="float64"),
-        "slo": pd.Series(dtype="float64"),
-        "slo_min": pd.Series(dtype="float64"),
-        "weight": pd.Series(dtype="float64"),
-        "title": pd.Series(dtype="str"),
-        "category": pd.Series(dtype="str")
-    })
-    for d in config['dimensions']:
-        initial_data[d] = pd.Series(dtype="str")
-
-    initial_data.to_parquet(config['data']['summary'], index=False)
-
 # Function to create Dash app
 def create_dashboard(server):
     app = Dash(

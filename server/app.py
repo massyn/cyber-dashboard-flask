@@ -7,10 +7,6 @@ server = Flask(__name__)
 
 config = read_config()
 
-# == get the files from the storage account, but don't overwrite it if they already exist
-cloud_storage_read(config['data']['summary'],False)
-cloud_storage_read(config['data']['detail'],False)
-
 server.secret_key = config['secret_key']
 
 server.register_blueprint(api_blueprint)
