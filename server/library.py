@@ -145,7 +145,7 @@ def cloud_storage_read(local_file,overwrite=False):
         
         s3_client = boto3.client('s3')
         try:
-            s3_client.download_file(bucket, key)
+            s3_client.download_file(bucket, key, local_file)
             print("AWS S3 Download complete.")
             return True
         except ClientError as e:
