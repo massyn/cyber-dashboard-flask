@@ -30,6 +30,17 @@
     margin-bottom: 1rem; /* Adds space between each filter */
 }
 
+.sub-graphs-container {
+    display: flex;
+    flex-direction: row; /* Arrange children side by side */
+    gap: 1rem;          /* Add some space between the two graphs */
+}
+
+.sub-graph {
+    flex: 1;            /* Ensure both graphs take up equal width */
+    min-width: 0;       /* Prevent graphs from shrinking weirdly */
+}
+
 .content {
     flex: 1;  /* Takes up remaining space */
     padding: 1rem;
