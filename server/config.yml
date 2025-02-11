@@ -9,9 +9,8 @@ tokens:     # an array of bearer tokens that are acceptable for use by the produ
   - 6002920168C3253430A653E16AD36EE88F6E3C7D917A5F245F735D96ABDA67FE
 secret_key: FB7E8E6841E29B45B1158029C9606D43FA8083704EBA83EC620FAD2373BDAEBE  # change this token before you go live.  This is used to encrypt the session tokens
 # -- where would you like to store the target parquet files?
-data:
-  detail: ../data/detail.parquet
-  summary: ../data/summary.parquet
+detail: ../data/detail.parquet
+summary: ../data/summary.parquet
 # -- tweak the RAG colour scheme here if you like.
 RAG:
   red:   ['#C00000', '#FFFFFF']

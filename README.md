@@ -166,9 +166,8 @@ Defines the paths to the data files used in the dashboard.
 
 Example:
 ```yaml
-data:
-  detail: ../data/detail.parquet
-  summary: ../data/summary.parquet
+detail: ../data/detail.parquet
+summary: ../data/summary.parquet
 ```
 
 ### `RAG` (Red-Amber-Green Color Scheme)
@@ -198,6 +197,18 @@ While the `app.py` script can be executed locally, you should not run this on a 
 You should also deploy something like an [Nginx Reverse Proxy](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-20-04) to provide an additional layer of isolation between your app and the internet.
 
 With Nginx, you have the option of restricting access using [basic authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/) or hook it up to an IDP like [Okta](https://developer.okta.com/blog/2018/08/28/nginx-auth-request)
+
+## Overwriting the config.yml attributes
+
+Some attributes in the `config.yml` file can be overwritten with environment variables.  This is handy in cases where you want to test some code, without the need to recompile the entire system.
+
+The following variables are supported.
+
+| Config    | Environment variable |
+|-----------|----------------------|
+| `title`   | `DASHBOARD_TITLE`    |
+| `summary` | `DASHBOARD_SUMMARY`  |
+| `detail`  | `DASHBOARD_DETAIL`   |
 
 ## Additional tops for success
 

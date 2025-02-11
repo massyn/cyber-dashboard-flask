@@ -9,8 +9,8 @@ def load_summary():
     config = read_config()
 
     # == get the files from the storage account, but don't overwrite it if they already exist
-    if not cloud_storage_read(config['data']['summary'],False):
-        if not os.path.exists(config['data']['summary']):
+    if not cloud_storage_read(config['summary'],False):
+        if not os.path.exists(config['summary']):
             initial_data = pd.DataFrame({
                 "datestamp": pd.Series(dtype="datetime64[ns]"),
                 "metric_id": pd.Series(dtype="str"),
@@ -25,17 +25,17 @@ def load_summary():
             for d in config['dimensions']:
                 initial_data[d] = pd.Series(dtype="str")
 
-            initial_data.to_parquet(config['data']['summary'], index=False)
+            initial_data.to_parquet(config['summary'], index=False)
 
-    return pd.read_parquet(config['data']['summary'])
+    return pd.read_parquet(config['summary'])
 
 def load_detail():
     config = read_config()
 
     # == read the cloud storage
-    if not cloud_storage_read(config['data']['detail'],False):
+    if not cloud_storage_read(config['detail'],False):
         # Initialize dataset and save it to disk if it doesn't exist
-        if not os.path.exists(config['data']['detail']):
+        if not os.path.exists(config['detail']):
             initial_data = pd.DataFrame({
                 "datestamp" : pd.Series(dtype="datetime64[ns]"),
                 "metric_id" : pd.Series(dtype="str"),
@@ -54,9 +54,9 @@ def load_detail():
                 initial_data[d] = pd.Series(dtype="str")
                 print("adding {d}")
 
-            initial_data.to_parquet(config['data']['detail'], index=False)
+            initial_data.to_parquet(config['detail'], index=False)
 
-    return pd.read_parquet(config['data']['detail'])
+    return pd.read_parquet(config['detail'])
 
 def read_config():
     config_path = "config.yml"
@@ -74,6 +74,12 @@ def read_config():
 
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
+
+    # Start experimenting with the idea of overwriting some config parameters from the environment variables
+    for v in ['title','detail','summary']:
+        ev = f"DASHBOARD_{v.upper()}"
+        if ev in os.environ:
+            config[v] = os.environ[ev]
 
     config['cli'] = {'load': load_path}
 
