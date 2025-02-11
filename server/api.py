@@ -2,12 +2,14 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 import os
 from io import StringIO
-from library import read_config, cloud_storage_write
+from library import read_config, cloud_storage_write, load_detail
 import tabulate
 
 config = read_config()
 
 api_blueprint = Blueprint('api', __name__)
+
+df_detail = load_detail()
 
 def retention_summary(df):
     df['datestamp'] = pd.to_datetime(df['datestamp'])
