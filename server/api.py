@@ -98,8 +98,8 @@ def data_sanitise_detail(new_data):
     return new_data
 
 def save_data(df):
-    if os.path.exists(config['data']['detail']):
-        orig_df = pd.read_parquet(config['data']['detail'])
+    if os.path.exists(config['detail']):
+        orig_df = pd.read_parquet(config['detail'])
         # == delete the old metric - this dataframe should only contain the latest
         for metric_id in df['metric_id'].unique():
             try:
@@ -116,8 +116,8 @@ def save_data(df):
         df_detail['count'] = 1
 
     df_detail['datestamp'] = pd.to_datetime(df_detail['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
-    df_detail.to_parquet(config['data']['detail'], index=False)
-    cloud_storage_write(config['data']['detail'])
+    df_detail.to_parquet(config['detail'], index=False)
+    cloud_storage_write(config['detail'])
 
     # == pivot the summary
     primary_columns = ['datestamp','metric_id','title','category','slo','slo_min','weight']
@@ -127,8 +127,8 @@ def save_data(df):
     df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : 'sum' , 'count' : 'sum'}).reset_index()
     df_summary.columns = primary_columns + new_columns + ['totalok', 'total']
 
-    if os.path.exists(config['data']['summary']):
-        orig_summary_df = pd.read_parquet(config['data']['summary'])
+    if os.path.exists(config['summary']):
+        orig_summary_df = pd.read_parquet(config['summary'])
 
         # Ensure the columns exist in both DataFrames
         if 'metric_id' in orig_summary_df.columns and 'datestamp' in orig_summary_df.columns:
@@ -146,8 +146,8 @@ def save_data(df):
     df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce')
     df = retention_summary(df_summary)  # apply data retention policy to keep the summary data small
     df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
-    df_summary.to_parquet(config['data']['summary'], index=False)
-    cloud_storage_write(config['data']['summary'])
+    df_summary.to_parquet(config['summary'], index=False)
+    cloud_storage_write(config['summary'])
     
 # Function to check if the token is valid (in the list of valid tokens)
 def check_token(token):
