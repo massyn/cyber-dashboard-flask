@@ -8,6 +8,8 @@ dimensions:   # specify the dimension field name (used in the csv file) and the 
 tokens:     # an array of bearer tokens that are acceptable for use by the producer.  CHANGE THESE BEFORE YOU GO LIVE
   - 6002920168C3253430A653E16AD36EE88F6E3C7D917A5F245F735D96ABDA67FE
 secret_key: FB7E8E6841E29B45B1158029C9606D43FA8083704EBA83EC620FAD2373BDAEBE  # change this token before you go live.  This is used to encrypt the session tokens
+# -- Set the privacy mode.  When true, it will hide detail and resource on the evidence page
+privacy: true
 # -- where would you like to store the target parquet files?
 detail: ../data/detail.parquet
 summary: ../data/summary.parquet

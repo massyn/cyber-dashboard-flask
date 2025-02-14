@@ -149,6 +149,10 @@ An array of bearer tokens that are used for authentication purposes. These token
   ```
   - **Note**: Make sure to replace these tokens before the application goes live.
 
+### `privacy`
+
+Sometimes in development systems you don't want to reveal sensitive data.  By setting `privacy` to `true`, you effectively hide the `resource` and `detail` columns when viewing detailed information.
+
 ### `secret_key`
 A secret key used for session token encryption. This key should be kept secure and changed before going live to prevent unauthorized access to session data.
 
@@ -209,6 +213,7 @@ The following variables are supported.
 | `title`   | `DASHBOARD_TITLE`    |
 | `summary` | `DASHBOARD_SUMMARY`  |
 | `detail`  | `DASHBOARD_DETAIL`   |
+| `privacy` | `DASHBOARD_PRIVACY`  |
 
 ## Additional tops for success
 

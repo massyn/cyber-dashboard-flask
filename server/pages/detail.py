@@ -63,6 +63,10 @@ def update_detail(metric_id,*selected_values):
     # filter df_summary by metric_id
     df_metric = df_metric[df_metric['metric_id'] == metric_id]
     
+    if config.get('privacy'):
+        df_metric['detail'] = 'redacted - privacy enabled'
+        df_metric['resource'] = 'redacted - privacy enabled'
+
     fig_table = generate_detail_table(RAG,df_metric)
     
     return fig_overview,fig_table
