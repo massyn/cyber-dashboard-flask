@@ -6,6 +6,7 @@ from dash import html
 def generate_executive_dimension_chart(RAG,dimensions,df):
     if df.empty:
         return html.Div("No data available for selected filters.", className="empty-message")
+    df = df[df['indicator'] != True]
     q1 = (
         df.groupby(['metric_id', next(iter(dimensions.keys())), 'weight'], as_index=False).apply(
             lambda group: pd.Series({

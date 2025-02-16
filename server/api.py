@@ -65,6 +65,11 @@ def data_sanitise_detail(new_data):
     if 'count' not in new_data.columns:
         new_data['count'] = 1
 
+    if 'indicator' not in new_data.columns:
+        new_data['indicator'] = False
+    else:
+        new_data['indicator'] = new_data['indicator'].fillna('').astype(str).str.lower() == 'true'
+        
     if 'title' not in new_data.columns:
         new_data['title'] = new_data['metric_id']
     
@@ -76,15 +81,7 @@ def data_sanitise_detail(new_data):
     
     if 'weight' not in new_data.columns:
         new_data['weight'] = 0.5
-    
-    # Check if the float values are between 0 and 1
-    for f in ['slo','slo_min','weight']:
-        if not new_data[f].between(0, 1).all():
-            return jsonify({"success": False, "message": f"Values in '{f}' column must be between 0 and 1"}), 400
-    
-    if (new_data['slo'] < new_data['slo_min']).all():
-        return jsonify({"success": False, "message": f"slo must be greater than slo_min"}), 400
-    
+        
     # == check the dimensions
     for d in config['dimensions']:
         if d not in new_data.columns:
@@ -92,7 +89,7 @@ def data_sanitise_detail(new_data):
     
     # == let's clean up any columns that should not be there
     for c in new_data.columns:
-        if c not in config['dimensions'] and c not in ['metric_id','resource','compliance','count','detail','slo','slo_min','weight','title','category','datestamp']:
+        if c not in config['dimensions'] and c not in ['metric_id','resource','compliance','count','detail','slo','slo_min','weight','title','category','datestamp','indicator']:
             del new_data[c]
 
     return new_data
@@ -120,7 +117,7 @@ def save_data(df):
     cloud_storage_write(config['detail'])
 
     # == pivot the summary
-    primary_columns = ['datestamp','metric_id','title','category','slo','slo_min','weight']
+    primary_columns = ['datestamp','metric_id','title','category','slo','slo_min','weight','indicator']
     new_columns = [key for key in config['dimensions'].keys() if key not in primary_columns]
     
     #df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : ['sum','count']}).reset_index()
@@ -146,6 +143,11 @@ def save_data(df):
     df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce')
     df = retention_summary(df_summary)  # apply data retention policy to keep the summary data small
     df['datestamp'] = pd.to_datetime(df['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
+
+    if 'indicator' not in df.columns:
+        df['indicator'] = False
+    df['indicator'] = df['indicator'].fillna('').astype(str).str.lower() == 'true'
+    
     df_summary.to_parquet(config['summary'], index=False)
     cloud_storage_write(config['summary'])
     

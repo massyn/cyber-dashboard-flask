@@ -20,7 +20,8 @@ def load_summary():
                 "slo_min": pd.Series(dtype="float64"),
                 "weight": pd.Series(dtype="float64"),
                 "title": pd.Series(dtype="str"),
-                "category": pd.Series(dtype="str")
+                "category": pd.Series(dtype="str"),
+                "indicator" : pd.Series(dtype="bool")
             })
             for d in config['dimensions']:
                 initial_data[d] = pd.Series(dtype="str")
@@ -47,7 +48,8 @@ def load_detail():
                 "slo_min"   : pd.Series(dtype="float64"),
                 "weight"    : pd.Series(dtype="float64"),
                 "title"     : pd.Series(dtype="str"),
-                "category"  : pd.Series(dtype="str")
+                "category"  : pd.Series(dtype="str"),
+                "indicator" : pd.Series(dtype="bool")
             })
             new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
             for d in new_columns:

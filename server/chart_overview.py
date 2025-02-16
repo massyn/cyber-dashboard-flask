@@ -5,6 +5,7 @@ from dash import html
 def generate_executive_overview_chart(RAG,df,title = "Executive Summary"):
     if df.empty:
         return html.Div("No data available for selected filters.", className="empty-message")
+    df = df[df['indicator'] != True]
     q1 = (
         df.groupby(['metric_id', 'datestamp', 'weight'])
         .agg(

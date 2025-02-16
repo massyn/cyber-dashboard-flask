@@ -25,8 +25,6 @@ The app is built on Python 3.13.  Make sure you are running at least 3.x.  Some 
 
 * http://localhost:8080
 
-Logon with the default credentials (`user` / `password123`)
-
 At this point, the dashboard would appear, but it will be completely empty.  Let's add a metric to it.
 
 **Add a metric to the dashboard**
@@ -46,13 +44,13 @@ We will add some data.  We use a simple vulnerability management metric that ind
 | vm-99     | ServerI  | 1          | Marketing     |
 | vm-99     | ServerJ  | 1          | Marketing     |
 
-Prepare a `csv` data blob of the data you'd like to ingest.  The following `curl` command can be used to simulate the loading of this data via API.
+Prepare a `csv` file of the data you'd like to ingest.  The following `curl` command can be used to simulate the loading of this data via API.
 
 ```bash
     curl -X POST http://localhost:8080/api \
     -H "Authorization: Bearer 6002920168C3253430A653E16AD36EE88F6E3C7D917A5F245F735D96ABDA67FE" \
     -H "Content-Type: text/csv" \
-    --data-binary $'metric_id,resource,compliance,business_unit\nvm-99,ServerA,1,Sales\nvm-99,ServerB,0,Sales\nvm-99,ServerC,1,Sales\nvm-99,ServerD,1,Sales\nvm-99,ServerE,0,Marketing\nvm-99,ServerF,0,Marketing\nvm-99,ServerG,1,Marketing\nvm-99,ServerH,0,Marketing\nvm-99,ServerI,1,Marketing\nvm-99,ServerJ,1,Marketing\n'
+    --data-binary "@test.csv"
 ```
 
 On success, you should see a message like this:
@@ -81,7 +79,8 @@ The `/api` call serves one purpose only - to load data into the dashboard.  It o
 | `slo_min`    | float  | No        | Minimum service level objective percentage between 0 and 1 | 0.90        |
 | `weight`     | float  | No        | Weight of the metric                                       | 0.90        |
 | `resource`   | string | Yes       | Unique identifier for the resource being                   |             |
-| `compliance` | float  | No        | Compliance value between 0 and 1                           | 0           |
+| `compliance` | float  | No        | Compliance value, typically between 0 and 1                | 0           |
+| `count`      | float  | No        | A counter for this data point.                             | 1           |
 | `detail`     | string | No        | Additional information to help with remediation            | **blank**   |
 | *            | string | No        | Additional dimensions to be used if required               | `undefined` |
 
@@ -109,7 +108,7 @@ In addition to summarising the values, the data is also stored as a time series.
 | `slo_min`    | float  | Minimum service level objective percentage between 0 and 1 |
 | `weight`     | float  | Weight of the metric                                       |
 | `totalok`    | float  | Sum of compliance                                          |
-| `total`      | float  | Count of compliance                                        |
+| `total`      | float  | Sum of count                                               |
 | *            | string | Additional dimensions to be used if required               |
 
 ## About the dashboard
@@ -162,7 +161,7 @@ A secret key used for session token encryption. This key should be kept secure a
   ```
   - **Note**: This key is critical for the security of your application. Ensure it is changed before deployment.
 
-### `data`
+### Data locations
 Defines the paths to the data files used in the dashboard.
 
 - **detail**: Specifies the location of the detailed data file (`detail.parquet`). This file is used for providing detailed insights into the operational data.
@@ -202,6 +201,8 @@ You should also deploy something like an [Nginx Reverse Proxy](https://www.digit
 
 With Nginx, you have the option of restricting access using [basic authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/) or hook it up to an IDP like [Okta](https://developer.okta.com/blog/2018/08/28/nginx-auth-request)
 
+See the [cyber-metrics-docker](https://github.com/massyn/cyber-metrics-docker) project on how to run this dashboard in a production environment with Gunicorn and Nginx.
+
 ## Overwriting the config.yml attributes
 
 Some attributes in the `config.yml` file can be overwritten with environment variables.  This is handy in cases where you want to test some code, without the need to recompile the entire system.
@@ -218,6 +219,7 @@ The following variables are supported.
 ## Additional tops for success
 
 * The `compliance` field is a float, a percentage of compliance if you will.  That means that when you decide compliance for a particular resource, you could infact define _partial_ compliance.
+* `compliance` can als be an arbitrary indicator.  You have the option to feed the additional `count` variable in the csv file.  Typically a percentage is calculated as `compliance / count`, so where needed, you can feed a higher count value if you had a need to modify the metric calculation.
 * To backup and restore, the `data` folder, and `config.yml` needs to be backed up.  To restore, simply install a fresh instance, and replace the `data` folder and `configy.yml` files.
 * You can start the dashboard with a custom `config.yml` file by starting the `app.py` with the `-config` parameter to the new config, for example:
 
@@ -235,7 +237,3 @@ One particular use case I had was to be able to load data into the parquet file 
 The load process will support the loading of `.csv`, `.json` or `.parquet` files depending on their file extension, provided they follow the same data load schema.
 
 The parquet files will be updated as per normal, and any subsequent start of the dashboard will read the data in the same way.
-
-### Docker
-
-See the [cyber-metrics-docker](https://github.com/massyn/cyber-metrics-docker) project on how to run this dashboard as a Docker container.
