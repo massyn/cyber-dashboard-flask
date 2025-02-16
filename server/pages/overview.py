@@ -17,6 +17,9 @@ dropdown_inputs = [Input(f"{column_name}-dropdown", "value") for column_name in 
 
 def layout():
     return [
+        html.Div([
+            dcc.Link("About", href="/about", className="back-button"),
+        ], className="back-button-container"),
         html.Div(className="graph-container", children=[
             dcc.Graph(id="overview-graph", className="graph overview-graph", config={"displayModeBar": False}),
             html.Div(className="sub-graphs-container", children=[

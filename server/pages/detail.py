@@ -16,7 +16,8 @@ dropdown_inputs = [Input(f"{column_name}-dropdown", "value") for column_name in 
 def layout(metric = None):
     return html.Div([
         html.Div([
-            dcc.Link("Back", href="/", className="back-button"),
+            dcc.Link("Home", href="/", className="back-button"),
+            dcc.Link("About", href="/about", className="back-button"),
         ], className="back-button-container"),
         html.H1(f"Metric: {metric}"),
         dcc.Store(id="metric-id-store", data=metric),

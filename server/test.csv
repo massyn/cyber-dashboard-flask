@@ -1,0 +1,4 @@
+metric_id,compliance,resource
+test,1,A
+test,0,B
+test,1,C

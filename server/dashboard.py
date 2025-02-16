@@ -27,7 +27,7 @@ def create_dashboard(server):
     # Dash layout
     app.layout = html.Div(className="app-container", children=[
         html.Header(className="header", children=[
-            html.H1("Continuous Assurance", className="header-title"),
+            html.P("Continuous Assurance", className="header-title"),
             html.P(config.get('title', 'Set the "title" field in config.yml'), className="header-description"),
         ]),
         

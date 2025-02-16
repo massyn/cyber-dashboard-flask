@@ -59,6 +59,36 @@
     width: 100%;
 }
 
+.header-title {
+    font-size: 32px;  /* Larger size for H1 */
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: white; 
+}
+
+h1 {
+    font-size: 32px;  /* Larger size for H1 */
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #222; /* Darker color for contrast */
+}
+
+h2 {
+    font-size: 28px;  /* Slightly smaller than H1 */
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+h3 {
+    font-size: 24px;  /* Differentiate from H2 */
+    font-weight: bold;
+    margin-top: 18px;
+    margin-bottom: 10px;
+    color: #444;
+}
+
 @media (max-width: 1024px) {
     .main-container {
         flex-direction: column;
