@@ -62,8 +62,9 @@ def generate_executive_overview_chart(RAG,df,title = "Executive Summary",indicat
         text_auto=True
     )
     if not indicator:
-        fig.update_yaxes(range=[0, 1], tickformat=".0%", title=None)
+        fig.update_yaxes(range=[0, 1], tickformat=".0%")
     fig.update_xaxes(title=None)
+    fig.update_yaxes(title=None)
     fig.update_layout(showlegend=False)
     fig.update_layout(xaxis_type="category")
 
