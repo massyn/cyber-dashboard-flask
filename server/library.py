@@ -91,6 +91,11 @@ def data_last_12_items(df):
     # Filter the DataFrame for the last 12 months
     df['datestamp'] = pd.to_datetime(df['datestamp'])
 
+    # how many dates
+    if len(df['datestamp'].unique()) == 1:
+        df['datestamp'] = pd.to_datetime(df['datestamp']).dt.strftime('%Y-%m-%d')
+        return df
+
     twelve_months_ago = pd.Timestamp.now() - pd.DateOffset(months=12)
     df_filtered = df[df['datestamp'] >= twelve_months_ago]
     
@@ -99,6 +104,7 @@ def data_last_12_items(df):
 
     # Determine the number of rows and the interval for spacing
     num_records = len(df_filtered)
+    
     if num_records < 12:
         # If there are fewer than 12 records, just use them all
         selected_datestamps = df_filtered

@@ -52,7 +52,7 @@ def update_detail(metric_id,*selected_values):
     # filter df_summary by metric_id
     df_summary = df_summary[df_summary['metric_id'] == metric_id]
     df_summary['score'] = df_summary['totalok'] / df_summary['total'] * df_summary['weight']
-    fig_overview = generate_executive_overview_chart(RAG, data_last_12_items(df_summary),"Metric Overview")
+    fig_overview = generate_executive_overview_chart(RAG, data_last_12_items(df_summary),"Metric Overview",True)
 
     df_metric = load_detail()
     

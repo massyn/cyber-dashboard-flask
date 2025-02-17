@@ -51,18 +51,18 @@ def generate_executive_metrics_chart(RAG, df):
         data=q1.sort_values(by="score", ascending=True).to_dict('records'),
         style_table={'height': '300px', 'overflowY': 'auto'},
         style_data={
-            'textAlign': 'left',  # Align text to the left
-            'whiteSpace': 'normal',  # Enable text wrapping
+            'textAlign': 'left',
+            'whiteSpace': 'normal',
         },
         style_header={
-            'textAlign': 'left',  # Align header text to the left
-            'fontWeight': 'bold',  # Make header text bold
+            'textAlign': 'left',
+            'fontWeight': 'bold',
         },
         style_data_conditional=[
             {
                 'if': {
                     'column_id': 'Score',
-                    'filter_query': 'rag = "amber"',
+                    'filter_query': '{rag} = "amber"',
                 },
                 'backgroundColor': RAG['amber'][0],
                 'color': RAG['amber'][1]
