@@ -19,3 +19,4 @@ The list of metrics will provide you with a view of all your cyber metrics, and 
 ## About this dashboard
 
 This dashboard is open source, and free for use, on condition that you provide feedback and updates for system improvement via the [Github issues log](https://github.com/massyn/cyber-dashboard-flask/issues).  You are also enouraged to raise pull requests to submit code improvement to the system.
+
