@@ -54,7 +54,6 @@ def load_detail():
             new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
             for d in new_columns:
                 initial_data[d] = pd.Series(dtype="str")
-                print("adding {d}")
 
             initial_data.to_parquet(config['detail'], index=False)
 
