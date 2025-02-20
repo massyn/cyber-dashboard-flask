@@ -80,7 +80,10 @@ def read_config():
     for v in ['title','detail','summary','privacy']:
         ev = f"DASHBOARD_{v.upper()}"
         if ev in os.environ:
-            config[v] = os.environ[ev]
+            if v != 'privacy':
+                config[v] = os.environ[ev]
+            else:
+                config[v] = os.environ[ev].lower() == 'true'
 
     config['cli'] = {'load': load_path}
 
