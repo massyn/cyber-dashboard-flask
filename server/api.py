@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import pandas as pd
 import os
 from io import StringIO
-from library import read_config, cloud_storage_write, load_detail
+from library import read_config, cloud_storage_write, load_detail, postgres_write
 import tabulate
 
 config = read_config()
@@ -109,12 +109,10 @@ def save_data(df):
         else:
             df_detail = pd.concat([df,orig_df], ignore_index=True)
 
-    if 'count' not in df_detail.columns:
-        df_detail['count'] = 1
-
     df_detail['datestamp'] = pd.to_datetime(df_detail['datestamp'], errors='coerce').dt.strftime('%Y-%m-%d')
     df_detail.to_parquet(config['detail'], index=False)
     cloud_storage_write(config['detail'])
+    postgres_write(df,'detail',['metric_id'])
 
     # == pivot the summary
     primary_columns = ['datestamp','metric_id','title','category','slo','slo_min','weight','indicator']
@@ -123,6 +121,8 @@ def save_data(df):
     #df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : ['sum','count']}).reset_index()
     df_summary = df.groupby(primary_columns + new_columns).agg({'compliance' : 'sum' , 'count' : 'sum'}).reset_index()
     df_summary.columns = primary_columns + new_columns + ['totalok', 'total']
+
+    postgres_write(df_summary,'summary',['metric_id','datestamp'])
 
     if os.path.exists(config['summary']):
         orig_summary_df = pd.read_parquet(config['summary'])
@@ -150,6 +150,7 @@ def save_data(df):
     
     df_summary.to_parquet(config['summary'], index=False)
     cloud_storage_write(config['summary'])
+    
     
 # Function to check if the token is valid (in the list of valid tokens)
 def check_token(token):

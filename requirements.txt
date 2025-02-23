@@ -10,3 +10,4 @@ setuptools
 tabulate
 numpy
 boto3==1.36.23
+sqlalchemy

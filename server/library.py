@@ -4,6 +4,7 @@ import sys
 import boto3
 from botocore.exceptions import ClientError
 import os
+from sqlalchemy import create_engine, text #, MetaData
 
 def load_summary():
     config = read_config()
@@ -167,3 +168,42 @@ def cloud_storage_read(local_file,overwrite=False):
         except ClientError as e:
             print(f"AWS S3 Download ERROR : {e}")
             return False
+
+def postgres_write(df,table_name,primary_keys):
+    DB_HOST = os.getenv("POSTGRES_HOST")
+    DB_NAME = os.getenv("POSTGRES_DATABASE")
+    DB_PORT = os.getenv("POSTGRES_PORT", "5432")  # Default to 5432 if not set
+    DB_USER = os.getenv("POSTGRES_USER")
+    DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+    if not all([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD]):
+        return
+    engine = create_engine(f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",isolation_level="AUTOCOMMIT")
+    #metadata = MetaData()
+    connection = engine.connect()
+    if not engine.dialect.has_table(connection, table_name):
+        print(f"INFO - Table '{table_name}' does not exist in the database.")   
+        try:
+            df.to_sql(table_name, engine, if_exists='replace', index=False)
+            print(f"SUCCESS - upload_to_postgres - Data successfully uploaded to the '{table_name}' table.")
+        except Exception as e:
+            print(f"ERROR - upload_to_postgres - Error uploading data to PostgreSQL: {e}")
+            raise
+    else:
+        # find all primary keys in the df
+        primary_key_values = df[primary_keys].drop_duplicates().to_dict(orient="records")
+        with engine.connect() as connection:
+            for record in primary_key_values:
+                conditions = " AND ".join([f"{key} = :{key}" for key in primary_keys])  # Dynamic WHERE clause
+                delete_query = text(f"DELETE FROM {table_name} WHERE {conditions}")
+
+                print("test ===============")
+                print(delete_query)
+                connection.execute(delete_query, record)
+
+        print(f"INFO - Uploading {len(df)} records to the '{table_name}' table...")
+        try:
+            df.to_sql(table_name, engine, if_exists='append', index=False)
+            print(f"SUCCESS - upload_to_postgres - Data successfully uploaded to the '{table_name}' table.")
+        except Exception as e:
+            print(f"ERROR - upload_to_postgres - Error uploading data to PostgreSQL: {e}")
+            raise
