@@ -12,7 +12,7 @@ def load_summary():
     # == get the files from the storage account, but don't overwrite it if they already exist
     if not cloud_storage_read(config['summary'],False):
         df = postgres_read('summary')
-        if df == False:
+        if not isinstance(df, pd.DataFrame):
             if not os.path.exists(config['summary']):
                 initial_data = pd.DataFrame({
                     "datestamp": pd.Series(dtype="datetime64[ns]"),
@@ -42,7 +42,7 @@ def load_detail():
     if not cloud_storage_read(config['detail'],False):
         # if we can't get it from the cloud, we try to get it from Postgres
         df = postgres_read('detail')
-        if df == False:
+        if not isinstance(df, pd.DataFrame):
             # Initialize dataset and save it to disk if it doesn't exist
             if not os.path.exists(config['detail']):
                 initial_data = pd.DataFrame({
