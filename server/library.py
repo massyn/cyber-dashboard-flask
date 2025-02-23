@@ -4,30 +4,34 @@ import sys
 import boto3
 from botocore.exceptions import ClientError
 import os
-from sqlalchemy import create_engine, text #, MetaData
+from sqlalchemy import create_engine, text
 
 def load_summary():
     config = read_config()
 
     # == get the files from the storage account, but don't overwrite it if they already exist
     if not cloud_storage_read(config['summary'],False):
-        if not os.path.exists(config['summary']):
-            initial_data = pd.DataFrame({
-                "datestamp": pd.Series(dtype="datetime64[ns]"),
-                "metric_id": pd.Series(dtype="str"),
-                "total": pd.Series(dtype="float64"),
-                "totalok": pd.Series(dtype="float64"),
-                "slo": pd.Series(dtype="float64"),
-                "slo_min": pd.Series(dtype="float64"),
-                "weight": pd.Series(dtype="float64"),
-                "title": pd.Series(dtype="str"),
-                "category": pd.Series(dtype="str"),
-                "indicator" : pd.Series(dtype="bool")
-            })
-            for d in config['dimensions']:
-                initial_data[d] = pd.Series(dtype="str")
+        df = postgres_read('summary')
+        if df == False:
+            if not os.path.exists(config['summary']):
+                initial_data = pd.DataFrame({
+                    "datestamp": pd.Series(dtype="datetime64[ns]"),
+                    "metric_id": pd.Series(dtype="str"),
+                    "total": pd.Series(dtype="float64"),
+                    "totalok": pd.Series(dtype="float64"),
+                    "slo": pd.Series(dtype="float64"),
+                    "slo_min": pd.Series(dtype="float64"),
+                    "weight": pd.Series(dtype="float64"),
+                    "title": pd.Series(dtype="str"),
+                    "category": pd.Series(dtype="str"),
+                    "indicator" : pd.Series(dtype="bool")
+                })
+                for d in config['dimensions']:
+                    initial_data[d] = pd.Series(dtype="str")
 
-            initial_data.to_parquet(config['summary'], index=False)
+                initial_data.to_parquet(config['summary'], index=False)
+            else:
+                df.to_parquet(config['summary'], index=False)
 
     return pd.read_parquet(config['summary'])
 
@@ -36,27 +40,32 @@ def load_detail():
 
     # == read the cloud storage
     if not cloud_storage_read(config['detail'],False):
-        # Initialize dataset and save it to disk if it doesn't exist
-        if not os.path.exists(config['detail']):
-            initial_data = pd.DataFrame({
-                "datestamp" : pd.Series(dtype="datetime64[ns]"),
-                "metric_id" : pd.Series(dtype="str"),
-                "resource"  : pd.Series(dtype="str"),
-                "compliance": pd.Series(dtype="float64"),
-                "count"     : pd.Series(dtype="float64"),
-                "detail"    : pd.Series(dtype="str"),
-                "slo"       : pd.Series(dtype="float64"),
-                "slo_min"   : pd.Series(dtype="float64"),
-                "weight"    : pd.Series(dtype="float64"),
-                "title"     : pd.Series(dtype="str"),
-                "category"  : pd.Series(dtype="str"),
-                "indicator" : pd.Series(dtype="bool")
-            })
-            new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
-            for d in new_columns:
-                initial_data[d] = pd.Series(dtype="str")
+        # if we can't get it from the cloud, we try to get it from Postgres
+        df = postgres_read('detail')
+        if df == False:
+            # Initialize dataset and save it to disk if it doesn't exist
+            if not os.path.exists(config['detail']):
+                initial_data = pd.DataFrame({
+                    "datestamp" : pd.Series(dtype="datetime64[ns]"),
+                    "metric_id" : pd.Series(dtype="str"),
+                    "resource"  : pd.Series(dtype="str"),
+                    "compliance": pd.Series(dtype="float64"),
+                    "count"     : pd.Series(dtype="float64"),
+                    "detail"    : pd.Series(dtype="str"),
+                    "slo"       : pd.Series(dtype="float64"),
+                    "slo_min"   : pd.Series(dtype="float64"),
+                    "weight"    : pd.Series(dtype="float64"),
+                    "title"     : pd.Series(dtype="str"),
+                    "category"  : pd.Series(dtype="str"),
+                    "indicator" : pd.Series(dtype="bool")
+                })
+                new_columns = [key for key in config['dimensions'].keys() if key not in list(initial_data.columns)]
+                for d in new_columns:
+                    initial_data[d] = pd.Series(dtype="str")
 
-            initial_data.to_parquet(config['detail'], index=False)
+                initial_data.to_parquet(config['detail'], index=False)
+            else:
+                df.to_parquet(config['detail'], index=False)
 
     return pd.read_parquet(config['detail'])
 
@@ -178,7 +187,6 @@ def postgres_write(df,table_name,primary_keys):
     if not all([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD]):
         return
     engine = create_engine(f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",isolation_level="AUTOCOMMIT")
-    #metadata = MetaData()
     connection = engine.connect()
     if not engine.dialect.has_table(connection, table_name):
         print(f"INFO - Table '{table_name}' does not exist in the database.")   
@@ -195,9 +203,6 @@ def postgres_write(df,table_name,primary_keys):
             for record in primary_key_values:
                 conditions = " AND ".join([f"{key} = :{key}" for key in primary_keys])  # Dynamic WHERE clause
                 delete_query = text(f"DELETE FROM {table_name} WHERE {conditions}")
-
-                print("test ===============")
-                print(delete_query)
                 connection.execute(delete_query, record)
 
         print(f"INFO - Uploading {len(df)} records to the '{table_name}' table...")
@@ -206,4 +211,26 @@ def postgres_write(df,table_name,primary_keys):
             print(f"SUCCESS - upload_to_postgres - Data successfully uploaded to the '{table_name}' table.")
         except Exception as e:
             print(f"ERROR - upload_to_postgres - Error uploading data to PostgreSQL: {e}")
+            raise
+
+def postgres_read(table_name):
+    DB_HOST = os.getenv("POSTGRES_HOST")
+    DB_NAME = os.getenv("POSTGRES_DATABASE")
+    DB_PORT = os.getenv("POSTGRES_PORT", "5432")  # Default to 5432 if not set
+    DB_USER = os.getenv("POSTGRES_USER")
+    DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+    if not all([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD]):
+        return False
+    engine = create_engine(f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
+    connection = engine.connect()
+    if not engine.dialect.has_table(connection, table_name):
+        print(f"INFO - Table '{table_name}' does not exist in the database.")
+        return False
+    else:
+        try:
+            df = pd.read_sql(f"SELECT * FROM {table_name}", engine)
+            print(f"SUCCESS - download_from_postgres - Data successfully downloaded from the '{table_name}' table.")
+            return df
+        except Exception as e:
+            print(f"ERROR - download_from_postgres - Error downloading data from PostgreSQL: {e}")
             raise
