@@ -30,8 +30,8 @@ def load_summary():
                     initial_data[d] = pd.Series(dtype="str")
 
                 initial_data.to_parquet(config['summary'], index=False)
-            else:
-                df.to_parquet(config['summary'], index=False)
+        else:
+            df.to_parquet(config['summary'], index=False)
 
     return pd.read_parquet(config['summary'])
 
@@ -64,8 +64,8 @@ def load_detail():
                     initial_data[d] = pd.Series(dtype="str")
 
                 initial_data.to_parquet(config['detail'], index=False)
-            else:
-                df.to_parquet(config['detail'], index=False)
+        else:
+            df.to_parquet(config['detail'], index=False)
 
     return pd.read_parquet(config['detail'])
 
