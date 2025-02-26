@@ -87,7 +87,7 @@ def read_config():
         config = yaml.safe_load(f)
 
     # Start experimenting with the idea of overwriting some config parameters from the environment variables
-    for v in ['title','detail','summary','privacy']:
+    for v in ['title','detail','summary','privacy','port']:
         ev = f"DASHBOARD_{v.upper()}"
         if ev in os.environ:
             if v != 'privacy':

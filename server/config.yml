@@ -18,4 +18,4 @@ RAG:
   red:   ['#C00000', '#FFFFFF']
   amber: ['#FFC000', '#000000']
   green: ['#00B050', '#FFFFFF']
-  
+port: 8080    # default network port the app will be served on

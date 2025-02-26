@@ -148,6 +148,10 @@ An array of bearer tokens that are used for authentication purposes. These token
   ```
   - **Note**: Make sure to replace these tokens before the application goes live.
 
+### `port`
+
+By default, the application is served on port `8080`.  You can modify this by specifying an alternate port.
+
 ### `privacy`
 
 Sometimes in development systems you don't want to reveal sensitive data.  By setting `privacy` to `true`, you effectively hide the `resource` and `detail` columns when viewing detailed information.
@@ -209,12 +213,13 @@ Some attributes in the `config.yml` file can be overwritten with environment var
 
 The following variables are supported.
 
-| Config    | Environment variable |
-|-----------|----------------------|
-| `title`   | `DASHBOARD_TITLE`    |
-| `summary` | `DASHBOARD_SUMMARY`  |
-| `detail`  | `DASHBOARD_DETAIL`   |
-| `privacy` | `DASHBOARD_PRIVACY`  |
+| Config    | Environment variable | Purpose                                      |
+|-----------|----------------------|--------------------------------------------- |
+| `title`   | `DASHBOARD_TITLE`    | Specify an alternate title for the dashboard |
+| `summary` | `DASHBOARD_SUMMARY`  | Path to the local summary.parquet file       |
+| `detail`  | `DASHBOARD_DETAIL`   | Path to the local detail.parquet file        |
+| `privacy` | `DASHBOARD_PRIVACY`  | If privacy should be enabled or not          |
+| `port`    | `DASHBOARD_PORT`     | Network port                                 |
 
 ## Additional tops for success
 
