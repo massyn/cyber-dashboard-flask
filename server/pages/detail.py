@@ -58,7 +58,7 @@ def update_detail(metric_id,*selected_values):
     
     latest_datestamp, indicator_value = df_summary.loc[df_summary['datestamp'].idxmax(), ['datestamp', 'indicator']]
     
-    fig_overview = generate_executive_overview_chart(RAG, data_last_12_items(df_summary),"Metric Overview",indicator_value)
+    fig_overview = generate_executive_overview_chart(RAG, data_last_12_items(df_summary),"Metric Overview","An overview of the metric's score over time",indicator_value)
 
     df_metric = load_detail()
     
