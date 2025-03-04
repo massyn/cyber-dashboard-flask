@@ -26,11 +26,45 @@
     gap: 1rem;
 }
 
+.button {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;  /* Reduced padding for a narrower button */
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    display: inline-block;
+    text-decoration: none;
+    margin-right: 8px;  /* Spacing between buttons */
+}
+
+/* Optional: Remove margin for the last button */
+.button:last-child {
+    margin-right: 0;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
 .filter-item {
     margin-bottom: 1rem; /* Adds space between each filter */
 }
 
 .graph {
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+    width: 100%; /* Ensure each chart container fully uses its grid column */
+}
+
+.table-container {
     background-color: #fafafa;
     border: 1px solid #ddd;
     border-radius: 6px;

@@ -17,9 +17,9 @@ dropdown_inputs = [Input(f"{column_name}-dropdown", "value") for column_name in 
 def layout(metric = None):
     return html.Div([
         html.Div([
-            dcc.Link("Home", href="/", className="back-button"),
-            dcc.Link("About", href="/about", className="back-button"),
-        ], className="back-button-container"),
+            dcc.Link("Home", href="/", className="button"),
+            dcc.Link("About", href="/about", className="button"),
+        ], className="button-container"),
         html.H1(f"Metric: {metric}"),
         dcc.Store(id="metric-id-store", data=metric),
         html.Div(className="graph-container", children=[
@@ -67,8 +67,8 @@ def update_detail(metric_id,*selected_values):
         if selected_value:
             df_metric = df_metric[df_metric[column_name] == selected_value]
 
-    # filter df_summary by metric_id
-    df_metric = df_metric[df_metric['metric_id'] == metric_id]
+    df_metric = df_metric[df_metric['metric_id'] == metric_id]  # filter df_summary by metric_id
+    df_metric = df_metric.sort_values(by='compliance', ascending=True) # sort by compliance
     
     if config.get('privacy'):
         df_metric['detail'] = 'redacted - privacy enabled'

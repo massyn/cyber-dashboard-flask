@@ -9,7 +9,7 @@ def layout():
 
     return html.Div([
         html.Div([
-            dcc.Link("Home", href="/", className="back-button"),
-        ], className="back-button-container"),
+            dcc.Link("Home", href="/", className="button"),
+        ], className="button-container"),
         dcc.Markdown(md_content)
     ])

@@ -18,8 +18,8 @@ dropdown_inputs = [Input(f"{column_name}-dropdown", "value") for column_name in 
 def layout():
     return [
         html.Div([
-            dcc.Link("About", href="/about", className="back-button"),
-        ], className="back-button-container"),
+            dcc.Link("About", href="/about", className="button"),
+        ], className="button-container"),
         html.Div(className="graph-container", children=[
             dcc.Graph(id="overview-graph", className="graph overview-graph", config={"displayModeBar": False}),
             html.Div(className="sub-graphs-container", children=[
@@ -58,7 +58,7 @@ def update_charts(*selected_values):
         how='inner'
     )
 
-    fig_overview = generate_executive_overview_chart(RAG, data_last_12_items(df_summary))
+    fig_overview = generate_executive_overview_chart(RAG, data_last_12_items(df_summary),"Executive Summary", "The Executive Summary provides an overview of all metrics and how they relate to the organisation")
     fig_dimension = generate_executive_dimension_chart(RAG, config['dimensions'], df_summary_latest)
     fig_category = generate_executive_category_chart(RAG, df_summary_latest)
     

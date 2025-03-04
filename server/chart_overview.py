@@ -2,7 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import html
 
-def generate_executive_overview_chart(RAG,df,title = "Executive Summary",indicator = False):
+def generate_executive_overview_chart(RAG,df,title = "Executive Summary",subtitle = "TODO", indicator = False):
     if df.empty:
         return html.Div("No data available for selected filters.", className="empty-message")
 
@@ -60,6 +60,19 @@ def generate_executive_overview_chart(RAG,df,title = "Executive Summary",indicat
         },
         title=title,
         text_auto=True
+    )
+    fig.update_layout(
+        annotations=[
+            dict(
+                x=0.0,
+                y=1.15,
+                xref="paper",
+                yref="paper",
+                text=subtitle,
+                showarrow=False,
+                font=dict(size=12)
+            )
+        ]
     )
     if not indicator:
         fig.update_yaxes(range=[0, 1], tickformat=".0%")
