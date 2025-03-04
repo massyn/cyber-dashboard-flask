@@ -4,6 +4,7 @@ from library import read_config, load_summary, load_detail, data_last_12_items
 from chart_overview import generate_executive_overview_chart
 from chart_detail import generate_detail_table
 import pandas as pd
+from chart_dimension import generate_executive_dimension_chart
 
 config = read_config()
 filters = config['dimensions']
@@ -21,9 +22,10 @@ def layout(metric = None):
         ], className="back-button-container"),
         html.H1(f"Metric: {metric}"),
         dcc.Store(id="metric-id-store", data=metric),
-        html.Div([
-            html.Div(className="graph-container", children=[
-                dcc.Graph(id="overview-detail-graph", className="graph overview-graph", config={"displayModeBar": False}),
+        html.Div(className="graph-container", children=[
+            html.Div(className="sub-graphs-container", children=[
+                dcc.Graph(id="overview-detail-graph", className="graph sub-graph", config={"displayModeBar": False}),
+                dcc.Graph(id="detail-dimension-graph", className="graph sub-graph", config={"displayModeBar": False}),
             ]),
             html.Div(className="table-container", children=[
             html.Div(className="metrics-header-container", children=[
@@ -37,6 +39,7 @@ def layout(metric = None):
 @callback(
     [
         Output("overview-detail-graph", "figure"),
+        Output("detail-dimension-graph", "figure"),
         Output("detail-table", "children")
     ],
     [Input("metric-id-store", "data")] + dropdown_inputs
@@ -72,5 +75,13 @@ def update_detail(metric_id,*selected_values):
         df_metric['resource'] = 'redacted - privacy enabled'
 
     fig_table = generate_detail_table(RAG,df_metric)
+
+    df_summary_latest = df_summary.merge(
+        df_summary.groupby('metric_id', as_index=False).agg({'datestamp': 'max'}),
+        on=['metric_id', 'datestamp'],
+        how='inner'
+    )
+
+    fig_dimension = generate_executive_dimension_chart(RAG, config['dimensions'], df_summary_latest)
     
-    return fig_overview,fig_table
+    return fig_overview,fig_dimension,fig_table
