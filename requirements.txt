@@ -1,7 +1,7 @@
 pandas
 pyarrow
 flask
-dash==2.11.1
+dash==2.15.0
 plotly==5.14.1
 plotly-express==0.4.1
 gunicorn
